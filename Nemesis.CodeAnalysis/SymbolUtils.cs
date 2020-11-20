@@ -15,7 +15,7 @@ namespace Nemesis.CodeAnalysis
                 .Where(m => string.IsNullOrEmpty(methodName) || m.Name == methodName)
                 .ToList();
 
-        public static IEnumerable<IMethodSymbol> GetInstanceConstructors(this INamedTypeSymbol symbol)
+        public static IEnumerable<IMethodSymbol> GetInstanceConstructors(this INamespaceOrTypeSymbol symbol)
         {
             return symbol.GetMembers()
                 .Where(s => s.Kind == SymbolKind.Method).OfType<IMethodSymbol>()
