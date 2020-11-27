@@ -93,7 +93,7 @@ namespace Nemesis.CodeAnalysis
                string.Equals(Initializer, other.Initializer) &&
                string.Equals(Documentation, other.Documentation);
 
-        public override bool Equals(object obj) => !(obj is null) && obj is LocalVariableMeta meta && Equals(meta);
+        public override bool Equals(object obj) => obj is LocalVariableMeta meta && Equals(meta);
 
         public override int GetHashCode()
         {
@@ -128,8 +128,9 @@ namespace Nemesis.CodeAnalysis
         public int CompareTo(object obj)
         {
             if (obj is null) return 1;
-            if (!(obj is LocalVariableMeta)) throw new ArgumentException($"Object must be of type {nameof(LocalVariableMeta)}");
-            return CompareTo((LocalVariableMeta) obj);
+            return obj is LocalVariableMeta meta
+                ? CompareTo(meta)
+                : throw new ArgumentException($"Object must be of type {nameof(LocalVariableMeta)}");
         }
     }
 }

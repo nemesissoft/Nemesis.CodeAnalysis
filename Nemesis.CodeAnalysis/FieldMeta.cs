@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Nemesis.CodeAnalysis
 {
-    public readonly struct FieldMeta : IEquatable<FieldMeta>, IComparable<FieldMeta>
+    [PublicAPI]
+    public readonly struct FieldMeta : IEquatable<FieldMeta>, IComparable<FieldMeta>, IComparable
     {
         public string DeclaredInClass { get; }
         public string FieldName { get; }
@@ -37,7 +38,7 @@ namespace Nemesis.CodeAnalysis
         }
 
         public static FieldMeta FromFieldSymbol(IFieldSymbol fieldRef, string initializer, string documentation) =>
-            new FieldMeta(fieldRef.ContainingType.Name, fieldRef.Name, SimpleType.FromTypeSymbol(fieldRef.Type), initializer, documentation);
+            new(fieldRef.ContainingType.Name, fieldRef.Name, SimpleType.FromTypeSymbol(fieldRef.Type), initializer, documentation);
 
         public static IEnumerable<FieldMeta> FromFieldDeclaration(VariableDeclarationSyntax fieldDeclaration, string declaredIn, SemanticModel semanticModel)
         {
@@ -60,7 +61,7 @@ namespace Nemesis.CodeAnalysis
         public bool Equals(FieldMeta other) =>
             string.Equals(DeclaredInClass, other.DeclaredInClass) && string.Equals(FieldName, other.FieldName) && Type.Equals(other.Type);
 
-        public override bool Equals(object obj) => !(obj is null) && obj is FieldMeta meta && Equals(meta);
+        public override bool Equals(object obj) => obj is FieldMeta meta && Equals(meta);
 
         public override int GetHashCode()
         {
@@ -84,6 +85,13 @@ namespace Nemesis.CodeAnalysis
             var fieldNameComparison = string.Compare(FieldName, other.FieldName, StringComparison.Ordinal);
             if (fieldNameComparison != 0) return fieldNameComparison;
             return Type.CompareTo(other.Type);
+        }
+        public int CompareTo(object obj)
+        {
+            if (obj is null) return 1;
+            return obj is FieldMeta meta
+                ? CompareTo(meta)
+                : throw new ArgumentException($"Object must be of type {nameof(FieldMeta)}");
         }
     }
 }
