@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
@@ -12,6 +13,7 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace Nemesis.CodeAnalysis
 {
+    [PublicAPI]
     public static class CompilationUtils
     {
         #region Evaluation
@@ -43,7 +45,7 @@ namespace Nemesis.CodeAnalysis
             return state.ReturnValue;
         }
 
-        private static readonly ConcurrentDictionary<string, Type> _nameToTypeMap = new ConcurrentDictionary<string, Type>();
+        private static readonly ConcurrentDictionary<string, Type> _nameToTypeMap = new();
         public static Type GetTypeFromCSharpNameCached(string csharpName, IEnumerable<string> additionalNamespaces = null, params Assembly[] additionalAssemblies)
             => _nameToTypeMap.GetOrAdd(csharpName,
                 name => GetTypeFromCSharpName(name, additionalNamespaces, additionalAssemblies)
@@ -67,23 +69,43 @@ namespace Nemesis.CodeAnalysis
                 .Select(d => d.ToString()).ToList();
         }
 
+        
         public static (Compilation compilation, SyntaxTree sourceTree, SemanticModel semanticModel) CreateTestCompilation(
-            string source, Assembly[] additionalAssemblies = null, [CallerMemberName]string memberName = null)
+            string source, Assembly[] additionalAssemblies = null, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, [CallerMemberName]string memberName = null)
         {
-            var tree = CSharpSyntaxTree.ParseText(source, 
-                    CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest)
-                    )
-                /*.WithFilePath(path)*/;
 
-            IEnumerable<Assembly> assemblies = new[] { typeof(object).Assembly };
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
+
+            var tree = CSharpSyntaxTree.ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest))
+                //.WithFilePath(path)
+                ;
+
+            var references = new List<PortableExecutableReference>(8)
+            {
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
+                MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location)
+            };
+
+            
             if (additionalAssemblies != null)
-                assemblies = assemblies.Concat(additionalAssemblies);
+                foreach (var ass in additionalAssemblies)
+                    references.Add(MetadataReference.CreateFromFile(ass.Location));
 
-            var references = assemblies.Select(ass => MetadataReference.CreateFromFile(ass.Location));
-
-            Compilation compilation = CSharpCompilation.Create($"{memberName}_Compilation", new[] { tree }, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-            SyntaxTree sourceTree = compilation.SyntaxTrees.Single();
+            
+            var compilation = CSharpCompilation.Create($"{memberName}_Compilation", new[] { tree }, references, new CSharpCompilationOptions(outputKind));
+            var sourceTree = compilation.SyntaxTrees.Single();
             return (compilation, sourceTree, compilation.GetSemanticModel(sourceTree));
+        }
+
+
+        public static GeneratorDriver CreateDriver(Compilation c, params ISourceGenerator[] generators)
+            => CSharpGeneratorDriver.Create(generators, parseOptions: (CSharpParseOptions)c.SyntaxTrees.First().Options);
+
+        public static Compilation RunGenerators(Compilation c, out IReadOnlyList<Diagnostic> diagnostics, params ISourceGenerator[] generators)
+        {
+            CreateDriver(c, generators).RunGeneratorsAndUpdateCompilation(c, out var compilation, out var diagnosticsArray);
+            diagnostics = diagnosticsArray;
+            return compilation;
         }
 
         public static Accessibility Minimum(Accessibility accessibility1, Accessibility accessibility2)
