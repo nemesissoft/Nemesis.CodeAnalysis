@@ -1,46 +1,47 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
-    
-    
-    <Authors>Michał Bryłka</Authors>
-    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
-    <PackageTags>Roslyn CodeAnalysis Utils Essentials</PackageTags>
-    <Copyright>Copyright (c) Michał Bryłka</Copyright>
-    <Description>Contains all essential utils that make using Roslyn a tad more favourable.</Description>
+	<PropertyGroup>
+		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
+		<Version>1.0.1</Version>
 
 
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageProjectUrl>https://github.com/nemesissoft/Nemesis.CodeAnalysis</PackageProjectUrl>
-
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-  
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="SymbolEquivalenceComparer.cs" />
-  </ItemGroup>
+		<Authors>Michał Bryłka</Authors>
+		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+		<PackageTags>Roslyn CodeAnalysis Utils Essentials</PackageTags>
+		<Copyright>Copyright (c) Michał Bryłka</Copyright>
+		<Description>Contains all essential utils that make using Roslyn a tad more favourable.</Description>
 
 
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.CodeAnalysis</PackageProjectUrl>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="3.8.0" />
-  </ItemGroup>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="SymbolEquivalenceComparer.cs" />
+	</ItemGroup>
 
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(MSBuildProjectName).Tests, PublicKey=00240000048000001401000006020000002400005253413100080000010001000115739c587175283151f028cc762dfe89ed0741f626402880f1dd9d849d36b10b9f6ecf323e79713e090f973e04a974dd59af2ef12c01ef8ec3eb597a10733e3d465388c9cfb113b31e362474e96259c4f62db88350030dcfa815b9ce9412325b974d2a7d40df027d1b9f1e26609795936e31b9c47aba29d4e25f5fc383ecde530cd504868744b752766192cf74dfb961d1aa6e2063b8509f8f1de2b6833a7a24289eedaa9b6031db7a7f95bbe84f1537fc8c5d188abdda490ed047b3fa7b6d852e83b0f0f197d7d1e4cf7acfc88063d16ff2925d2013ccedfa8982f8223e31f403421ecd5a4426c03fd0ba58dd9cf34e742a5203665e25e5462180ce68ddab</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="3.8.0" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(MSBuildProjectName).Tests, PublicKey=00240000048000001401000006020000002400005253413100080000010001000115739c587175283151f028cc762dfe89ed0741f626402880f1dd9d849d36b10b9f6ecf323e79713e090f973e04a974dd59af2ef12c01ef8ec3eb597a10733e3d465388c9cfb113b31e362474e96259c4f62db88350030dcfa815b9ce9412325b974d2a7d40df027d1b9f1e26609795936e31b9c47aba29d4e25f5fc383ecde530cd504868744b752766192cf74dfb961d1aa6e2063b8509f8f1de2b6833a7a24289eedaa9b6031db7a7f95bbe84f1537fc8c5d188abdda490ed047b3fa7b6d852e83b0f0f197d7d1e4cf7acfc88063d16ff2925d2013ccedfa8982f8223e31f403421ecd5a4426c03fd0ba58dd9cf34e742a5203665e25e5462180ce68ddab</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 
 </Project>

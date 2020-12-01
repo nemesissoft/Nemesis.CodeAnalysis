@@ -1,28 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+#nullable enable
+
 namespace Nemesis.CodeAnalysis
 {
-    public readonly struct LocalVariableMeta : IEquatable<LocalVariableMeta>, IComparable<LocalVariableMeta>, IComparable
+    public sealed record LocalVariableMeta(string DeclaredInMethod, string Name, SimpleType Type, string? Initializer, string Documentation) : IComparable<LocalVariableMeta>, IComparable
     {
-        public string DeclaredInMethod { get; }
-        public string Name { get; }
-        public SimpleType Type { get; }
-        public string Initializer { get; }
-        public string Documentation { get; }
-
-        public LocalVariableMeta(string declaredInMethod, string name, SimpleType type, string initializer, string documentation)
-        {
-            DeclaredInMethod = declaredInMethod;
-            Name = name;
-            Type = type;
-            Initializer = initializer;
-            Documentation = documentation;
-        }
-
         public static IEnumerable<LocalVariableMeta> GetLocalVariables(MethodDeclarationSyntax method, SemanticModel semanticModel)
         {
             var localVars =
@@ -38,7 +26,8 @@ namespace Nemesis.CodeAnalysis
 
         public static IEnumerable<LocalVariableMeta> FromVariableDeclaration(VariableDeclarationSyntax variableDeclaration, string declaredIn, SemanticModel semanticModel)
         {
-            var type = SimpleType.FromTypeSymbol(semanticModel.GetTypeInfo(variableDeclaration.Type).Type);
+            var type = SimpleType.FromTypeSymbol(semanticModel.GetTypeInfo(variableDeclaration.Type)) ??
+                       throw new NullReferenceException($"Type stored in '{variableDeclaration.Type}' cannot be null");
 
             return variableDeclaration.Variables.Select(
                     variable => new LocalVariableMeta
@@ -52,7 +41,7 @@ namespace Nemesis.CodeAnalysis
                 ).ToList();
         }
 
-        internal static string GetInitializerValue(ExpressionSyntax initValue, SemanticModel semanticModel) =>
+        internal static string? GetInitializerValue(ExpressionSyntax? initValue, SemanticModel semanticModel) =>
             initValue switch
             {
                 null => null,
@@ -87,33 +76,11 @@ namespace Nemesis.CodeAnalysis
 
         public override string ToString() => $"{DeclaredInMethod}\\{Name} = ({Initializer}) of type {Type}";
 
-        public bool Equals(LocalVariableMeta other)
-            => string.Equals(DeclaredInMethod, other.DeclaredInMethod) &&
-               string.Equals(Name, other.Name) && Type.Equals(other.Type) &&
-               string.Equals(Initializer, other.Initializer) &&
-               string.Equals(Documentation, other.Documentation);
 
-        public override bool Equals(object obj) => obj is LocalVariableMeta meta && Equals(meta);
-
-        public override int GetHashCode()
+        public int CompareTo(LocalVariableMeta? other)
         {
-            unchecked
-            {
-                var hashCode = (DeclaredInMethod != null ? DeclaredInMethod.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Initializer != null ? Initializer.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Documentation != null ? Documentation.GetHashCode() : 0);
-                return hashCode;
-            }
-        }
-
-        public static bool operator ==(LocalVariableMeta left, LocalVariableMeta right) => left.Equals(right);
-
-        public static bool operator !=(LocalVariableMeta left, LocalVariableMeta right) => !left.Equals(right);
-
-        public int CompareTo(LocalVariableMeta other)
-        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
             var declaredInMethodComparison = string.Compare(DeclaredInMethod, other.DeclaredInMethod, StringComparison.Ordinal);
             if (declaredInMethodComparison != 0) return declaredInMethodComparison;
             var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
@@ -125,12 +92,13 @@ namespace Nemesis.CodeAnalysis
             return string.Compare(Documentation, other.Documentation, StringComparison.Ordinal);
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj) => obj switch
         {
-            if (obj is null) return 1;
-            return obj is LocalVariableMeta meta
-                ? CompareTo(meta)
-                : throw new ArgumentException($"Object must be of type {nameof(LocalVariableMeta)}");
-        }
+            null => 1,
+            { } o when ReferenceEquals(this, o) => 0,
+            LocalVariableMeta other => CompareTo(other),
+            _ => throw new ArgumentException($"Object must be of type {nameof(LocalVariableMeta)}")
+
+        };
     }
 }
