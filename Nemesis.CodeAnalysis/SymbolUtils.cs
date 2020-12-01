@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 
 namespace Nemesis.CodeAnalysis
 {
+    [PublicAPI]
     public static class SymbolUtils
     {
         #region Metadata
@@ -31,9 +33,27 @@ namespace Nemesis.CodeAnalysis
             while (symbol.BaseType != null)
             {
                 var @base = symbol.BaseType;
-                //TODO use SpecialType.System_Object here ??
-                if (nameof(Object) != @base.Name && typeof(object).Namespace != @base.ContainingNamespace.ToString())
-                    yield return @base;
+                
+                if (nameof(Object) == @base.Name && typeof(object).Namespace == @base.ContainingNamespace.ToString())
+                    yield break;
+
+                yield return @base;
+                symbol = @base;
+            }
+        } 
+        
+        public static IEnumerable<INamedTypeSymbol> GetSymbolHierarchy(this ITypeSymbol symbol, Compilation compilation)
+        {
+            INamedTypeSymbol objType = compilation.GetSpecialType(SpecialType.System_Object);
+
+            while (symbol.BaseType != null)
+            {
+                var @base = symbol.BaseType;
+                
+                if (@base.Equals(objType, SymbolEqualityComparer.Default))
+                    yield break;
+
+                yield return @base;
                 symbol = @base;
             }
         }
