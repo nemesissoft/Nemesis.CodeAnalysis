@@ -161,7 +161,6 @@ namespace Nemesis.CodeAnalysis.Tests
             Result = (EmitResult)info.GetValue("Result", typeof(EmitResult));
         }
 
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null) throw new ArgumentNullException(nameof(info));
@@ -212,7 +211,7 @@ namespace Nemesis.CodeAnalysis.Tests
         {
             Code = code;
             ClassName = className;
-            AssemblyLocations = (assemblyLocations ?? new string[0]).ToList();
+            AssemblyLocations = (assemblyLocations ?? Array.Empty<string>()).ToList();
         }
     }
 
