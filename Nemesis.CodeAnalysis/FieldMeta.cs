@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+#nullable enable
 
 namespace Nemesis.CodeAnalysis
 {
@@ -42,8 +46,9 @@ namespace Nemesis.CodeAnalysis
 
         public static IEnumerable<FieldMeta> FromFieldDeclaration(VariableDeclarationSyntax fieldDeclaration, string declaredIn, SemanticModel semanticModel)
         {
-            var type = SimpleType.FromTypeSymbol(semanticModel.GetTypeInfo(fieldDeclaration.Type).Type);
-
+            var type = SimpleType.FromTypeSymbol(semanticModel.GetTypeInfo(fieldDeclaration.Type)) ??
+                throw new NullReferenceException($"Type stored in '{fieldDeclaration.Type}' cannot be null");
+            
             return fieldDeclaration.Variables.Select(
                     variable => new FieldMeta
                     (
