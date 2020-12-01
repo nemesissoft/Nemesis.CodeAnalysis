@@ -12,23 +12,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Nemesis.CodeAnalysis
 {
     [PublicAPI]
-    public readonly struct FieldMeta : IEquatable<FieldMeta>, IComparable<FieldMeta>, IComparable
+    public sealed record FieldMeta(string DeclaredInClass, string FieldName, SimpleType Type, string Initializer, string Documentation) : IComparable<FieldMeta>, IComparable
     {
-        public string DeclaredInClass { get; }
-        public string FieldName { get; }
-        public SimpleType Type { get; }
-        public string Initializer { get; }
-        public string Documentation { get; }
-
-        public FieldMeta(string declaredInClass, string fieldName, SimpleType type, string initializer, string documentation)
-        {
-            DeclaredInClass = declaredInClass;
-            FieldName = fieldName;
-            Type = type;
-            Initializer = initializer;
-            Documentation = documentation;
-        }
-
         public static IEnumerable<FieldMeta> GetFieldMeta(ClassDeclarationSyntax @class, SemanticModel semanticModel)
         {
             var fields =
@@ -48,7 +33,7 @@ namespace Nemesis.CodeAnalysis
         {
             var type = SimpleType.FromTypeSymbol(semanticModel.GetTypeInfo(fieldDeclaration.Type)) ??
                 throw new NullReferenceException($"Type stored in '{fieldDeclaration.Type}' cannot be null");
-            
+
             return fieldDeclaration.Variables.Select(
                     variable => new FieldMeta
                     (
@@ -63,40 +48,29 @@ namespace Nemesis.CodeAnalysis
 
         public override string ToString() => $"{DeclaredInClass}.{FieldName} = ({Initializer}) of type {Type}";
 
-        public bool Equals(FieldMeta other) =>
-            string.Equals(DeclaredInClass, other.DeclaredInClass) && string.Equals(FieldName, other.FieldName) && Type.Equals(other.Type);
 
-        public override bool Equals(object obj) => obj is FieldMeta meta && Equals(meta);
-
-        public override int GetHashCode()
+        public int CompareTo(FieldMeta? other)
         {
-            unchecked
-            {
-                var hashCode = (DeclaredInClass != null ? DeclaredInClass.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (FieldName != null ? FieldName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ Type.GetHashCode();
-                return hashCode;
-            }
-        }
-
-        public static bool operator ==(FieldMeta left, FieldMeta right) => left.Equals(right);
-
-        public static bool operator !=(FieldMeta left, FieldMeta right) => !left.Equals(right);
-
-        public int CompareTo(FieldMeta other)
-        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
             var declaredInClassComparison = string.Compare(DeclaredInClass, other.DeclaredInClass, StringComparison.Ordinal);
             if (declaredInClassComparison != 0) return declaredInClassComparison;
             var fieldNameComparison = string.Compare(FieldName, other.FieldName, StringComparison.Ordinal);
             if (fieldNameComparison != 0) return fieldNameComparison;
-            return Type.CompareTo(other.Type);
+            var typeComparison = Type.CompareTo(other.Type);
+            if (typeComparison != 0) return typeComparison;
+            var initializerComparison = string.Compare(Initializer, other.Initializer, StringComparison.Ordinal);
+            if (initializerComparison != 0) return initializerComparison;
+            return string.Compare(Documentation, other.Documentation, StringComparison.Ordinal);
         }
-        public int CompareTo(object obj)
+
+        public int CompareTo(object? obj) => obj switch
         {
-            if (obj is null) return 1;
-            return obj is FieldMeta meta
-                ? CompareTo(meta)
-                : throw new ArgumentException($"Object must be of type {nameof(FieldMeta)}");
-        }
+            null => 1,
+            { } o when ReferenceEquals(this, o) => 0,
+            FieldMeta other => CompareTo(other),
+            _ => throw new ArgumentException($"Object must be of type {nameof(FieldMeta)}")
+
+        };
     }
 }
