@@ -34,6 +34,8 @@ namespace Nemesis.CodeAnalysis.Tests
         private float _standardNumber;
         private float _standardNumberWithInit = 15;
         private const double _d = 3.14;
+        
+        private readonly string _noInit; 
 
         public TestClass(){}
         private TestClass(int i, float f){}        
@@ -45,6 +47,7 @@ namespace Nemesis.CodeAnalysis.Tests
             var floatInferred = 15.5f;
             int i = 60;
             string s1, s2 = ""ABC"", s3 = null;
+            bool noInit;
         }
     }";
 
@@ -74,6 +77,7 @@ namespace Nemesis.CodeAnalysis.Tests
         [TestCase("empty", "long")]
         [TestCase("cast", "ulong")]
         [TestCase("fromMethod", "long")]
+        [TestCase("_noInit", "string")]
         public void GetFieldMeta_ShouldHandleAllFieldTypes(string fieldName, string expectedType)
         {
             var metas = FieldMeta.GetFieldMeta(_class, _model).ToList().ToDictionary(m => m.FieldName);
@@ -98,6 +102,7 @@ namespace Nemesis.CodeAnalysis.Tests
         [TestCase("_roRef", @"""qwe""")]
         [TestCase("empty", null)]
         [TestCase("cast", "unchecked((ulong)-15)")]
+        [TestCase("_noInit", null)]
         //[TestCase("fromMethod", "6.5341666666666667")]
         public void GetFieldMeta_ShouldHandleInitializers(string fieldName, string expectedInit)
         {
@@ -106,9 +111,6 @@ namespace Nemesis.CodeAnalysis.Tests
             Assert.That(metas[fieldName].Initializer, Is.EqualTo(expectedInit));
         }
 
-        /*return (from d in data
-                         select new TestCaseData(d.type, d.generic).Returns(d.expectedResult)*/
-
         private static IEnumerable<TestCaseData> GetLocalVariables_ShouldHandleTypes_TestCases() => new (string varName, string expectedType)[]
             {
                 ("integerInferred", "int"),
@@ -116,7 +118,8 @@ namespace Nemesis.CodeAnalysis.Tests
                 ("i", "int"),
                 ("s1", "string"),
                 ("s2", "string"),
-                ("s3", "string")
+                ("s3", "string"),
+                ("noInit", "bool")
             }.Select(
             (tuple, _) => new TestCaseData(tuple.varName, tuple.expectedType)
         //.SetName($"{tuple.varName} of type {tuple.expectedType}")
@@ -137,7 +140,8 @@ namespace Nemesis.CodeAnalysis.Tests
             ("i", "60"),
             ("s1", null),
             ("s2", "\"ABC\""),
-            ("s3", "null")
+            ("s3", "null"),
+            ("noInit", null)
         }.Select(
             tuple => new TestCaseData(tuple.varName, tuple.expectedInit)
             //{ TestName = $"{tuple.varName} init with {tuple.expectedInit}" }
@@ -163,6 +167,8 @@ namespace Nemesis.CodeAnalysis.Tests
 
             Assert.That(@params, Is.EquivalentTo(new[] { "", "Int32 Single" }));
         }
+
+
 
         private static IEnumerable<TestCaseData> GetHierarchyTestCases() => new[]
         {

@@ -76,7 +76,7 @@ namespace SimpleNamespace
 
             var simpleTypes = variables.Select(v => v.TypeSymbol is { } ts ? SimpleType.FromTypeSymbol(ts) : default).ToList();
 
-            var simpleTypesTexts = simpleTypes.Select(st => st.ToString()).ToList();
+            var simpleTypesTexts = simpleTypes.Select(st => st?.ToString() ?? "NO TYPE").ToList();
 
             Assert.That(simpleTypesTexts, Is.EquivalentTo(new[]
             {

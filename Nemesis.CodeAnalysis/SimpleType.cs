@@ -11,30 +11,15 @@ using Microsoft.CodeAnalysis;
 namespace Nemesis.CodeAnalysis
 {
     [PublicAPI]
-    public readonly struct SimpleType : IEquatable<SimpleType>, IComparable<SimpleType>, IComparable
+    public sealed record SimpleType(string? Namespace, string Name, SimpleTypeKind Kind) : IComparable<SimpleType>, IComparable
     {
-        public string? Namespace { get; }
-        public string Name { get; }
-        public SimpleTypeKind Kind { get; }
+        public void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException($@"{nameof(Name)} cannot be null nor whitespace", nameof(Name));
+            if (!Enum.IsDefined(typeof(SimpleTypeKind), Kind)) throw new InvalidEnumArgumentException(nameof(Kind), (int)Kind, typeof(SimpleTypeKind));
+        }
 
         public bool IsValid => !string.IsNullOrEmpty(Name);
-
-        public SimpleType(string? @namespace, string name, SimpleTypeKind kind)
-        {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($@"{nameof(name)} cannot be null nor whitespace", nameof(name));
-            if (!Enum.IsDefined(typeof(SimpleTypeKind), kind)) throw new InvalidEnumArgumentException(nameof(kind), (int)kind, typeof(SimpleTypeKind));
-
-            Namespace = @namespace;
-            Name = name;
-            Kind = kind;
-        }
-
-        public void Deconstruct(out string? ns, out string name, out SimpleTypeKind kind)
-        {
-            ns = Namespace;
-            name = Name;
-            kind = Kind;
-        }
 
         public static SimpleType? FromTypeSymbol(TypeInfo typeInfo) => typeInfo.Type is { } type ? FromTypeSymbol(type) : null;
 
@@ -91,29 +76,10 @@ namespace Nemesis.CodeAnalysis
 
         public override string ToString() => string.IsNullOrWhiteSpace(Namespace) ? Name : $"{Namespace}.{Name}";
 
-        #region Equals and compare
-
-        public bool Equals(SimpleType other) => Namespace == other.Namespace && Name == other.Name && Kind == other.Kind;
-
-        public override bool Equals(object? obj) => obj is SimpleType other && Equals(other);
-
-        public override int GetHashCode()
+        public int CompareTo(SimpleType? other)
         {
-            unchecked
-            {
-                var hashCode = Namespace?.GetHashCode() ?? 0;
-                hashCode = (hashCode * 397) ^ Name.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)Kind;
-                return hashCode;
-            }
-        }
-
-
-        public static bool operator ==(SimpleType left, SimpleType right) => left.Equals(right);
-        public static bool operator !=(SimpleType left, SimpleType right) => !left.Equals(right);
-
-        public int CompareTo(SimpleType other)
-        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
             var namespaceComparison = string.Compare(Namespace, other.Namespace, StringComparison.Ordinal);
             if (namespaceComparison != 0) return namespaceComparison;
             var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
@@ -121,20 +87,14 @@ namespace Nemesis.CodeAnalysis
             return Kind.CompareTo(other.Kind);
         }
 
-        public int CompareTo(object? obj) =>
-            obj switch
-            {
-                null => 1,
-                SimpleType other => CompareTo(other),
-                _ => throw new ArgumentException($"Object must be of type {nameof(SimpleType)}")
-            };
+        public int CompareTo(object? obj) => obj switch
+        {
+            null => 1,
+            { } o when ReferenceEquals(this, o) => 0,
+            SimpleType other => CompareTo(other),
+            _ => throw new ArgumentException($"Object must be of type {nameof(SimpleType)}")
 
-        public static bool operator <(SimpleType left, SimpleType right) => left.CompareTo(right) < 0;
-        public static bool operator >(SimpleType left, SimpleType right) => left.CompareTo(right) > 0;
-        public static bool operator <=(SimpleType left, SimpleType right) => left.CompareTo(right) <= 0;
-        public static bool operator >=(SimpleType left, SimpleType right) => left.CompareTo(right) >= 0;
-
-        #endregion
+        };
     }
 
     [PublicAPI]

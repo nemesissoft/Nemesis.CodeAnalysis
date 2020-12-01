@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Nemesis.CodeAnalysis
 {
     [PublicAPI]
-    public sealed record FieldMeta(string DeclaredInClass, string FieldName, SimpleType Type, string Initializer, string Documentation) : IComparable<FieldMeta>, IComparable
+    public sealed record FieldMeta(string DeclaredInClass, string FieldName, SimpleType Type, string? Initializer, string Documentation) : IComparable<FieldMeta>, IComparable
     {
         public static IEnumerable<FieldMeta> GetFieldMeta(ClassDeclarationSyntax @class, SemanticModel semanticModel)
         {
