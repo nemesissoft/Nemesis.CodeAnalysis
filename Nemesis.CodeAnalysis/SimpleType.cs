@@ -79,7 +79,7 @@ namespace Nemesis.CodeAnalysis
         public int CompareTo(SimpleType? other)
         {
             if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
+            if (other is null) return 1;
             var namespaceComparison = string.Compare(Namespace, other.Namespace, StringComparison.Ordinal);
             if (namespaceComparison != 0) return namespaceComparison;
             var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
@@ -122,8 +122,6 @@ namespace Nemesis.CodeAnalysis
         Pointer = 9,
         /// <summary>Type is a C# struct or VB Structure</summary>
         Struct = 10, // 0x0A
-        /// <summary>Type is a C# struct or VB Structure</summary>
-        Structure = 10, // 0x0A
         /// <summary>Type is a type parameter.</summary>
         TypeParameter = 11, // 0x0B
         /// <summary>Type is an interactive submission.</summary>

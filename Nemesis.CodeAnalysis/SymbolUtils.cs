@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
+
 using Microsoft.CodeAnalysis;
 
 namespace Nemesis.CodeAnalysis
@@ -25,23 +27,35 @@ namespace Nemesis.CodeAnalysis
                 .ToList();
         }
 
-        public static bool ImplementsInterface(this ITypeSymbol typeSymbol, ISymbol @base) => 
+        public static bool ImplementsInterface(this ITypeSymbol typeSymbol, ISymbol @base) =>
             typeSymbol.ToString() == @base.ToString() || typeSymbol.AllInterfaces.Any(i => i.ToString() == @base.ToString());
+
+        public static IEnumerable<INamedTypeSymbol> GetInterfaceHierarchy(this ITypeSymbol symbol, ITypeSymbol baseInterface)
+        {
+            while (symbol.BaseType?.ImplementsInterface(baseInterface) ?? false)
+            {
+                var @base = symbol.BaseType;
+                if (nameof(Object) == @base.Name && typeof(object).Namespace == @base.ContainingNamespace.ToString())
+                    yield break;
+                yield return @base;
+                symbol = @base;
+            }
+        }
 
         public static IEnumerable<INamedTypeSymbol> GetSymbolHierarchy(this ITypeSymbol symbol)
         {
             while (symbol.BaseType != null)
             {
                 var @base = symbol.BaseType;
-                
+
                 if (nameof(Object) == @base.Name && typeof(object).Namespace == @base.ContainingNamespace.ToString())
                     yield break;
 
                 yield return @base;
                 symbol = @base;
             }
-        } 
-        
+        }
+
         public static IEnumerable<INamedTypeSymbol> GetSymbolHierarchy(this ITypeSymbol symbol, Compilation compilation)
         {
             INamedTypeSymbol objType = compilation.GetSpecialType(SpecialType.System_Object);
@@ -49,7 +63,7 @@ namespace Nemesis.CodeAnalysis
             while (symbol.BaseType != null)
             {
                 var @base = symbol.BaseType;
-                
+
                 if (@base.Equals(objType, SymbolEqualityComparer.Default))
                     yield break;
 
@@ -70,6 +84,7 @@ namespace Nemesis.CodeAnalysis
 
         #endregion
 
+
         #region Symbol queries
 
         public static bool IsRefOrOut(this IParameterSymbol symbol) => symbol.RefKind == RefKind.Ref || symbol.RefKind == RefKind.Out;
@@ -84,9 +99,9 @@ namespace Nemesis.CodeAnalysis
 
         public static bool IsNormalAnonymousType(this ISymbol symbol) => symbol.IsAnonymousType() && !symbol.IsDelegateType();
 
-        public static bool IsAnonymousType(this ISymbol symbol) => symbol is INamedTypeSymbol named && named.IsAnonymousType;
+        public static bool IsAnonymousType(this ISymbol symbol) => symbol is INamedTypeSymbol {IsAnonymousType: true};
 
-        public static bool IsDelegateType(this ISymbol symbol) => symbol is ITypeSymbol typeSymbol && typeSymbol.TypeKind == TypeKind.Delegate;
+        public static bool IsDelegateType(this ISymbol symbol) => symbol is ITypeSymbol {TypeKind: TypeKind.Delegate};
 
         #endregion
 
@@ -116,9 +131,7 @@ namespace Nemesis.CodeAnalysis
 
 
 /*
-public static CompilationUnitSyntax GetCompilationUnit(this SyntaxNode node) =>
-            node as CompilationUnitSyntax ?? node.SyntaxTree.GetCompilationUnitRoot() ??
-            throw new InvalidOperationException($"No CompilationUnitSyntax in {node.ToFullString()}");
+
 
  public static IEnumerable<(ClassDeclarationSyntax Class, INamedTypeSymbol Symbol)> GetClassDeclarationToSymbolPairs(
             this SemanticModel semanticModel, Func<INamedTypeSymbol, bool> filterPredicate = null)
