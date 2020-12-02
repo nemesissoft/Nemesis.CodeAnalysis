@@ -77,7 +77,7 @@ namespace Nemesis.CodeAnalysis
         #region Formatting
         public static byte GetElementIndentationLevel(SyntaxNode node)
         {
-            IEnumerable<SyntaxNode> GetHierarchy(SyntaxNode startNode)
+            static IEnumerable<SyntaxNode> GetHierarchy(SyntaxNode startNode)
             {
                 while (startNode.Parent != null)
                 {
