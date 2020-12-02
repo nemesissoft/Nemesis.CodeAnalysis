@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using NUnit.Framework;
 
+using TCD = NUnit.Framework.TestCaseData;
+
 namespace Nemesis.CodeAnalysis.Tests
 {
     [TestFixture]
@@ -29,8 +31,8 @@ namespace Nemesis.CodeAnalysis.Tests
         private long fromMethod = new TimeSpan(1, 2, 3).TotalHours + TimeSpan.FromHours(5.5).TotalHours;
         
 
-        private int _multiDecl1 = 11, _multiDecl2 = 22, _multiDecl3 = 33;
-        private string _partMultiDecl1 = null, _partMultiDecl2, _partMultiDecl3 = ""AAA"";
+        private int _multiDecl1 = 11, _multiDecl2 = 22, _multiDecl3 = 33, _multiDecl4;
+        private string _partMultiDecl1 = null, _partMultiDecl2, _partMultiDecl3 = ""AAA"", _partMultiDecl4 = ""null"";
         private float _standardNumber;
         private float _standardNumberWithInit = 15;
         private const double _d = 3.14;
@@ -64,54 +66,49 @@ namespace Nemesis.CodeAnalysis.Tests
             _model = model;
         }
 
-        [TestCase("_multiDecl1", "int")]
-        [TestCase("_multiDecl2", "int")]
-        [TestCase("_partMultiDecl1", "string")]
-        [TestCase("_partMultiDecl2", "string")]
-        [TestCase("_standardNumberWithInit", "float")]
-        [TestCase("_d", "double")]
-        [TestCase("_mPreOpenSliceTimeEndTimeOffsetSecs", "long")]
-        [TestCase("NOT_SET", "long")]
-        [TestCase("_readOnly", "string")]
-        [TestCase("_roRef", "string")]
-        [TestCase("empty", "long")]
-        [TestCase("cast", "ulong")]
-        [TestCase("fromMethod", "long")]
-        [TestCase("_noInit", "string")]
-        public void GetFieldMeta_ShouldHandleAllFieldTypes(string fieldName, string expectedType)
+        private static readonly IEnumerable<TCD> _getFieldMetaTestData = new[]
         {
-            var metas = FieldMeta.GetFieldMeta(_class, _model).ToList().ToDictionary(m => m.FieldName);
-            Assert.That(metas[fieldName].Type.Name, Is.EqualTo(expectedType));
-        }
+            new TCD("_multiDecl1", "int", "11"),
+            new TCD("_multiDecl2", "int", "22"),
+            new TCD("_multiDecl3", "int", "33"),
+            new TCD("_multiDecl4", "int", null),
 
-        [TestCase("_multiDecl1", "11")]
-        [TestCase("_multiDecl2", "22")]
-        [TestCase("_multiDecl3", "33")]
-        [TestCase("_partMultiDecl1", "null")]
-        [TestCase("_partMultiDecl2", null)]
-        [TestCase("_partMultiDecl3", "\"AAA\"")]
-        [TestCase("_standardNumber", null)]
-        [TestCase("_standardNumberWithInit", "15")]
-        [TestCase("_d", "3.14")]
-        [TestCase("_mPreOpenSliceTimeEndTimeOffsetSecs", "-1")]
-        [TestCase("NOT_SET", "-1")]
-        [TestCase("strConst", @"""Ala has a cat""")]
-        [TestCase("_readOnly", @"""qwe""")]
-        //[TestCase("_eval", @"""1230102666.5""")]
-        //[TestCase("_evalRef", @"""1230102666.5false""")]
-        [TestCase("_roRef", @"""qwe""")]
-        [TestCase("empty", null)]
-        [TestCase("cast", "unchecked((ulong)-15)")]
-        [TestCase("_noInit", null)]
-        //[TestCase("fromMethod", "6.5341666666666667")]
-        public void GetFieldMeta_ShouldHandleInitializers(string fieldName, string expectedInit)
+            new TCD("_partMultiDecl1", "string", "null"),
+            new TCD("_partMultiDecl2", "string", null),
+            new TCD("_partMultiDecl3", "string", "\"AAA\""),
+            new TCD("_partMultiDecl4", "string", "\"null\""),
+
+            new TCD("_standardNumber", "float", null),
+            new TCD("_standardNumberWithInit", "float", "15"),
+            new TCD("_d", "double", "3.14"),
+            new TCD("_mPreOpenSliceTimeEndTimeOffsetSecs", "long", "-1"),
+            new TCD("NOT_SET", "long", "-1"),
+            new TCD("strConst", "string", @"""Ala has a cat"""),
+            new TCD("_readOnly", "string", @"""qwe"""),
+            new TCD("_roRef", "string", @"""qwe"""),
+            new TCD("empty", "long", null),
+            new TCD("cast", "ulong", "unchecked((ulong)-15)"),
+            new TCD("fromMethod", "long",
+                "new TimeSpan(1, 2, 3).TotalHours + TimeSpan.FromHours(5.5).TotalHours"), 
+            new TCD("_noInit", "string", null),
+            /*TODO [TestCase("fromMethod", "6.5341666666666667")]
+                   [TestCase("_eval", @"""1230102666.5""")]
+                   [TestCase("_evalRef", @"""1230102666.5false""")]*/
+        };
+        [TestCaseSource(nameof(_getFieldMetaTestData))]
+        public void GetFieldMeta_ShouldHandleAllFieldTypesAndInitializers(string fieldName, string expectedType, string expectedInit)
         {
             var metas = FieldMeta.GetFieldMeta(_class, _model).ToList().ToDictionary(m => m.FieldName);
 
-            Assert.That(metas[fieldName].Initializer, Is.EqualTo(expectedInit));
+            Assert.That(metas, Does.ContainKey(fieldName), "BAD TEST DATA");
+
+            var meta = metas[fieldName];
+
+            Assert.That(meta.Type.Name, Is.EqualTo(expectedType));
+            Assert.That(meta.Initializer, Is.EqualTo(expectedInit));
         }
 
-        private static IEnumerable<TestCaseData> GetLocalVariables_ShouldHandleTypes_TestCases() => new (string varName, string expectedType)[]
+        private static IEnumerable<TCD> GetLocalVariables_ShouldHandleTypes_TestCases() => new (string varName, string expectedType)[]
             {
                 ("integerInferred", "int"),
                 ("floatInferred", "float"),
@@ -121,7 +118,7 @@ namespace Nemesis.CodeAnalysis.Tests
                 ("s3", "string"),
                 ("noInit", "bool")
             }.Select(
-            (tuple, _) => new TestCaseData(tuple.varName, tuple.expectedType)
+            (tuple, _) => new TCD(tuple.varName, tuple.expectedType)
         //.SetName($"{tuple.varName} of type {tuple.expectedType}")
         );
         [TestCaseSource(nameof(GetLocalVariables_ShouldHandleTypes_TestCases))]
@@ -133,7 +130,7 @@ namespace Nemesis.CodeAnalysis.Tests
             Assert.That(metas[varName].Type.Name, Is.EqualTo(expectedType));
         }
 
-        private static IEnumerable<TestCaseData> GetLocalVariables_ShouldHandleInitializers_TestCases() => new (string varName, string expectedInit)[]
+        private static IEnumerable<TCD> GetLocalVariables_ShouldHandleInitializers_TestCases() => new (string varName, string expectedInit)[]
         {
             ("integerInferred", "15"),
             ("floatInferred", "15.5f"),
@@ -143,7 +140,7 @@ namespace Nemesis.CodeAnalysis.Tests
             ("s3", "null"),
             ("noInit", null)
         }.Select(
-            tuple => new TestCaseData(tuple.varName, tuple.expectedInit)
+            tuple => new TCD(tuple.varName, tuple.expectedInit)
             //{ TestName = $"{tuple.varName} init with {tuple.expectedInit}" }
             //.SetName($"{tuple.varName} init with {tuple.expectedInit}")
         );
@@ -170,15 +167,15 @@ namespace Nemesis.CodeAnalysis.Tests
 
 
 
-        private static IEnumerable<TestCaseData> GetHierarchyTestCases() => new[]
+        private static IEnumerable<TCD> GetHierarchyTestCases() => new[]
         {
-            new TestCaseData("A", ""),
-            new TestCaseData("B", "A"),
-            new TestCaseData("C", "B->A"),
-            new TestCaseData("Object", "C->B->A"),
-            new TestCaseData("Der", "Object->C->B->A"),
-            new TestCaseData("Super", ""),
-            new TestCaseData("Object,1", "System.Super"),
+            new TCD("A", ""),
+            new TCD("B", "A"),
+            new TCD("C", "B->A"),
+            new TCD("Object", "C->B->A"),
+            new TCD("Der", "Object->C->B->A"),
+            new TCD("Super", ""),
+            new TCD("Object,1", "System.Super"),
         };
 
         private const string HIERARCHY_CODE = @"
@@ -195,9 +192,9 @@ namespace Nemesis.CodeAnalysis.Tests
                     class Der2 : Object {}
                 }";
 
-        private static readonly IEnumerable<TestCaseData> _simpleHierarchyTestData = GetHierarchyTestCases().Concat(new[]
+        private static readonly IEnumerable<TCD> _simpleHierarchyTestData = GetHierarchyTestCases().Concat(new[]
             {
-                new TestCaseData("Der2", ""), //no compilation data == no info about suspicious symbols 
+                new TCD("Der2", ""), //no compilation data == no info about suspicious symbols 
             });
 
         [TestCaseSource(nameof(_simpleHierarchyTestData))]
@@ -222,9 +219,9 @@ namespace Nemesis.CodeAnalysis.Tests
             Assert.That(hierarchyText, Is.EqualTo(expectedHierarchy));
         }
 
-        private static readonly IEnumerable<TestCaseData> _compilationHierarchyTestData = GetHierarchyTestCases().Concat(new[]
+        private static readonly IEnumerable<TCD> _compilationHierarchyTestData = GetHierarchyTestCases().Concat(new[]
         {
-            new TestCaseData("Der2", "System.Object->System.Super"),
+            new TCD("Der2", "System.Object->System.Super"),
         });
 
         [TestCaseSource(nameof(_compilationHierarchyTestData))]

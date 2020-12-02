@@ -45,6 +45,9 @@ namespace Nemesis.CodeAnalysis
 
         public static bool IsPartial(this TypeSyntax typeSyntax) => typeSyntax is IdentifierNameSyntax ident && ident.Identifier.IsKind(SyntaxKind.PartialKeyword);
 
+        public static CompilationUnitSyntax GetCompilationUnit(this SyntaxNode node) =>
+            node as CompilationUnitSyntax ?? node.SyntaxTree.GetCompilationUnitRoot();
+
         #region Tree manipulations
 
         public static TType RemoveFieldVariables<TType>(TType type, IReadOnlyCollection<string> fieldVariablesToRemove, bool createTypeCommentsOutOfRemovedVariables = false) where TType : TypeDeclarationSyntax
