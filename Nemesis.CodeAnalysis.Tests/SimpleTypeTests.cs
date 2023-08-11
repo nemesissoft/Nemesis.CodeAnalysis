@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-using NUnit.Framework;
+﻿using System.Numerics;
 
 #nullable enable
 
-namespace Nemesis.CodeAnalysis.Tests
+namespace Nemesis.CodeAnalysis.Tests;
+
+[TestFixture]
+public class SimpleTypeTests
 {
-    [TestFixture]
-    public class SimpleTypeTests
+    [Test]
+    public static void ShouldHandleVariousTypeNames()
     {
-        [Test]
-        public static void ShouldHandleVariousTypeNames()
-        {
-            const string SOURCE = @"
+        const string SOURCE = @"
 using System;
 using System.Collections.Generic;
 
@@ -66,32 +57,32 @@ namespace SimpleNamespace
     }
 }
 ";
-            var (_, sourceTree, semanticModel) = CompilationUtils.CreateTestCompilation(SOURCE, new[] { typeof(SyntaxTree).Assembly, typeof(CSharpSyntaxTree).Assembly, typeof(System.Collections.Specialized.BitVector32).Assembly });
+        var (_, sourceTree, semanticModel) = CompilationUtils.CreateTestCompilation(SOURCE, new[] { typeof(SyntaxTree).Assembly, typeof(CSharpSyntaxTree).Assembly, typeof(System.Collections.Specialized.BitVector32).Assembly });
 
-            var variables =
-                sourceTree.GetRoot().DescendantNodes().OfType<VariableDeclarationSyntax>()
-                    .Select(declaration =>
-                        (Name: declaration.Variables.Single().Identifier.ValueText, TypeSymbol: semanticModel.GetTypeInfo(declaration.Type).Type)
-                    ).ToList();
+        var variables =
+            sourceTree.GetRoot().DescendantNodes().OfType<VariableDeclarationSyntax>()
+                .Select(declaration =>
+                    (Name: declaration.Variables.Single().Identifier.ValueText, TypeSymbol: semanticModel.GetTypeInfo(declaration.Type).Type)
+                ).ToList();
 
-            var simpleTypes = variables.Select(v => v.TypeSymbol is { } ts ? SimpleType.FromTypeSymbol(ts) : default).ToList();
+        var simpleTypes = variables.Select(v => v.TypeSymbol is { } ts ? SimpleType.FromTypeSymbol(ts) : default).ToList();
 
-            var simpleTypesTexts = simpleTypes.Select(st => st?.ToString() ?? "NO TYPE").ToList();
+        var simpleTypesTexts = simpleTypes.Select(st => st?.ToString() ?? "NO TYPE").ToList();
 
-            Assert.That(simpleTypesTexts, Is.EquivalentTo(new[]
-            {
-                "dynamic",
-                "System.int", "System.int", "System.string", "System.string",
-                "System.Collections.Generic.List<string>", "System.Collections.Generic.List<string>", "System.Collections.Generic.List<int?>", "System.Collections.Generic.List<int?>", "System.Collections.Generic.IList<string>", "System.Collections.Generic.IList<string>",
-                "System.Collections.Specialized.BitVector32",
-                "System.byte[][]", "System.byte[][][,][]", "System.string[]", "System.int[,]", "System.float[,,]",
-                "<global namespace>.<anonymous type: int Number>", "System.(int, int, int)",
-                "SimpleNamespace.Function<int, string>", "System.Func<int, string>",
-                "System.Collections.Generic.IList<Dictionary<long, BitVector32[]>>"
-            }));
-        }
+        Assert.That(simpleTypesTexts, Is.EquivalentTo(new[]
+        {
+            "dynamic",
+            "System.int", "System.int", "System.string", "System.string",
+            "System.Collections.Generic.List<string>", "System.Collections.Generic.List<string>", "System.Collections.Generic.List<int?>", "System.Collections.Generic.List<int?>", "System.Collections.Generic.IList<string>", "System.Collections.Generic.IList<string>",
+            "System.Collections.Specialized.BitVector32",
+            "System.byte[][]", "System.byte[][][,][]", "System.string[]", "System.int[,]", "System.float[,,]",
+            "<global namespace>.<anonymous type: int Number>", "System.(int, int, int)",
+            "SimpleNamespace.Function<int, string>", "System.Func<int, string>",
+            "System.Collections.Generic.IList<Dictionary<long, BitVector32[]>>"
+        }));
+    }
 
-        private const string NAMESPACE_EXTRACT_CODE = @"
+    private const string NAMESPACE_EXTRACT_CODE = @"
 namespace NumberNamespace
 {
     readonly struct Number { }
@@ -120,40 +111,39 @@ namespace TestNamespace
     }
 }";
 
-        private IReadOnlyCollection<(string Name, ITypeSymbol TypeSymbol)> _namespaceFields = Array.Empty<(string, ITypeSymbol)>();
+    private IReadOnlyCollection<(string Name, ITypeSymbol TypeSymbol)> _namespaceFields = Array.Empty<(string, ITypeSymbol)>();
 
-        [OneTimeSetUp]
-        public void BeforeAnyTests()
-        {
-            var (_, tree, semanticModel) = CompilationUtils.CreateTestCompilation(NAMESPACE_EXTRACT_CODE, new[] { typeof(BigInteger).Assembly });
+    [OneTimeSetUp]
+    public void BeforeAnyTests()
+    {
+        var (_, tree, semanticModel) = CompilationUtils.CreateTestCompilation(NAMESPACE_EXTRACT_CODE, new[] { typeof(BigInteger).Assembly });
 
-            var @class = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().First(cds => cds.Identifier.ValueText == "Test");
-            _namespaceFields = @class.ChildNodes().OfType<FieldDeclarationSyntax>()
-                .Select(f => f.Declaration)
-                .SelectMany(decl => decl.Variables.Select(v =>
-                    (v.Identifier.Text, semanticModel.GetTypeInfo(decl.Type).Type ?? throw new NotSupportedException("No type info")))
-                )
-                .ToList();
-        }
+        var @class = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().First(cds => cds.Identifier.ValueText == "Test");
+        _namespaceFields = @class.ChildNodes().OfType<FieldDeclarationSyntax>()
+            .Select(f => f.Declaration)
+            .SelectMany(decl => decl.Variables.Select(v =>
+                (v.Identifier.Text, semanticModel.GetTypeInfo(decl.Type).Type ?? throw new NotSupportedException("No type info")))
+            )
+            .ToList();
+    }
 
-        [TestCase("Bi", "System.Numerics")]
-        [TestCase("N1", "NumberNamespace")]
-        [TestCase("A1", "NumberNamespace;System")]
-        [TestCase("Nc1", "CollectionNamespace")]
-        [TestCase("C_N_N", "NumberNamespace;System;System.Collections.ObjectModel")]
-        [TestCase("C_N_M_N", "NumberNamespace;System;System.Collections.ObjectModel;NullableNamespace")]
-        public void ExtractNamespaces_ShouldExtractNestedNamespaces(string symbolName, string expectedNamespacesText)
-        {
-            var expectedNamespaces = new SortedSet<string>(expectedNamespacesText.Split(';'));
-            var symbolMeta = _namespaceFields.SingleOrDefault(p => p.Name == symbolName);
-            Assert.That(symbolName, Is.Not.Null, "Initialization error");
-            var namespaces = new SortedSet<string>();
-
-
-            SimpleType.ExtractNamespaces(symbolMeta.TypeSymbol, namespaces);
+    [TestCase("Bi", "System.Numerics")]
+    [TestCase("N1", "NumberNamespace")]
+    [TestCase("A1", "NumberNamespace;System")]
+    [TestCase("Nc1", "CollectionNamespace")]
+    [TestCase("C_N_N", "NumberNamespace;System;System.Collections.ObjectModel")]
+    [TestCase("C_N_M_N", "NumberNamespace;System;System.Collections.ObjectModel;NullableNamespace")]
+    public void ExtractNamespaces_ShouldExtractNestedNamespaces(string symbolName, string expectedNamespacesText)
+    {
+        var expectedNamespaces = new SortedSet<string>(expectedNamespacesText.Split(';'));
+        var symbolMeta = _namespaceFields.SingleOrDefault(p => p.Name == symbolName);
+        Assert.That(symbolName, Is.Not.Null, "Initialization error");
+        var namespaces = new SortedSet<string>();
 
 
-            Assert.That(namespaces, Is.EquivalentTo(expectedNamespaces));
-        }
+        SimpleType.ExtractNamespaces(symbolMeta.TypeSymbol, namespaces);
+
+
+        Assert.That(namespaces, Is.EquivalentTo(expectedNamespaces));
     }
 }

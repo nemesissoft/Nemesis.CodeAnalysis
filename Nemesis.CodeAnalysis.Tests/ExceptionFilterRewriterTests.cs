@@ -1,19 +1,12 @@
-﻿using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using NUnit.Framework;
+﻿namespace Nemesis.CodeAnalysis.Tests;
 
-namespace Nemesis.CodeAnalysis.Tests
+[TestFixture]
+public class ExceptionFilterRewriterTests
 {
-    [TestFixture]
-    public class ExceptionFilterRewriterTests
+    [Test]
+    public void ShouldRewriteToExceptionFilter()
     {
-        [Test]
-        public void ParseTest()
-        {
-            const string CODE = @"
+        const string CODE = @"
 class Program { 
     static void Main()
     {
@@ -29,14 +22,7 @@ class Program {
     }
 }
 ";
-            var tree = CSharpSyntaxTree.ParseText(CODE);
-
-            var root = tree.GetRoot();
-
-            var @try = root.DescendantNodes().OfType<TryStatementSyntax>().Single();
-
-            var newTry = new ExceptionFilterRewriter("_logger", new[] { "LogError" }).Visit(@try).NormalizeWhitespace().ToFullString();
-            /* RESULT:
+        const string EXPECTED_CODE = """
             try
             {
             }
@@ -44,7 +30,15 @@ class Program {
             {
                 return null;
             }
-                         */
-        }
+            """;
+        var tree = CSharpSyntaxTree.ParseText(CODE);
+
+        var root = tree.GetRoot();
+
+        var @try = root.DescendantNodes().OfType<TryStatementSyntax>().Single();
+
+        var actual = new ExceptionFilterRewriter("_logger", new[] { "LogError" }).Visit(@try).NormalizeWhitespace().ToFullString();
+
+        Assert.That(actual, Is.EqualTo(EXPECTED_CODE));
     }
 }

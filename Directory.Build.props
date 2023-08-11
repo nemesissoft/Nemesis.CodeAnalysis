@@ -1,17 +1,37 @@
 <Project>
-  <PropertyGroup>
-    <Version>1.0.0</Version><!--This will get replaced by Build system -->
-    <LangVersion>latest</LangVersion>
+	<PropertyGroup>
+		<Version>1.0.0</Version><!--This will get replaced by Build system -->
+		<LangVersion>11.0</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
 
-    <Authors>Michał Bryłka</Authors>
-    
-    <NoWarn>NU5105</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-    <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\Nemesis.CodeAnalysis.Public.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+		<Authors>Michał Bryłka</Authors>
+		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+		<Copyright>Copyright (c) Michał Bryłka</Copyright>
+		<IsPackable>false</IsPackable>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.CodeAnalysis</PackageProjectUrl>
+		<PackageTags>Roslyn CodeAnalysis Utils Essentials</PackageTags>		
+		<Description>Contains all essential utils that make using Roslyn a tad more favourable.</Description>
+
+
+
+		<NoWarn>NU5105</NoWarn>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+
+		<SignAssembly>true</SignAssembly>
+		<DelaySign>false</DelaySign>
+		<PublicSign>true</PublicSign>
+		<AssemblyOriginatorKeyFile>..\Nemesis.CodeAnalysis.Public.snk</AssemblyOriginatorKeyFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="System.Linq.Expressions" />
+		<Using Include="System.Text" />		
+		<Using Include="Microsoft.CodeAnalysis" />		
+		<Using Include="Microsoft.CodeAnalysis.CSharp" />		
+		<Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
+	</ItemGroup>
 
 </Project>

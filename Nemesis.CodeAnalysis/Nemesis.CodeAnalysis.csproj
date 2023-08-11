@@ -1,37 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
-		<Version>1.0.2</Version>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 
-
-		<Authors>Michał Bryłka</Authors>
-		<PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
-		<PackageTags>Roslyn CodeAnalysis Utils Essentials</PackageTags>
-		<Copyright>Copyright (c) Michał Bryłka</Copyright>
-		<Description>Contains all essential utils that make using Roslyn a tad more favourable.</Description>
-
-
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<PackageProjectUrl>https://github.com/nemesissoft/Nemesis.CodeAnalysis</PackageProjectUrl>
-
+		<IsPackable>true</IsPackable>
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+		<DebugType>embedded</DebugType>
+		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="SymbolEquivalenceComparer.cs" />
-	</ItemGroup>
-
-
-
+	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.8.0" />
+
+		<!--<PackageReference Include="Microsoft.CodeAnalysis" Version="4.6.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.6.0" />-->
 	</ItemGroup>
 
 
