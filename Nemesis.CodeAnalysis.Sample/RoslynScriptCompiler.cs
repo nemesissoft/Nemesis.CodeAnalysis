@@ -7,7 +7,7 @@ namespace Nemesis.CodeAnalysis.Sample;
 
 class RoslynScriptCompiler
 {
-    public void SampleCompilation()
+    public static void SampleCompilation()
     {
         //var compiler1 = new CodeDomCompiler();
         var compiler2 = new RoslynCompiler();

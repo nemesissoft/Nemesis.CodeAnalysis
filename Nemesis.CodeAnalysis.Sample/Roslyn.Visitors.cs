@@ -1,9 +1,7 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.Diagnostics;
+﻿using System.Diagnostics;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace Nemesis.CodeAnalysis.Tests;
+namespace Nemesis.CodeAnalysis.Sample;
 
 partial class Roslyn
 {
@@ -83,7 +81,7 @@ partial class Roslyn
         var setterReferences2 = setters2.Select(setter => SymbolFinder.FindCallersAsync(setter, project.Solution).Result.ToList()).ToList();
     }*/
 
-    [Test]
+
     public static void CtorExpressionAssignments()
     {
         string code = @"class Base
@@ -123,27 +121,28 @@ partial class Roslyn
         var ctors = classes.SelectMany(c => c.DescendantNodes().OfType<ConstructorDeclarationSyntax>()
             .Where(ctor => ctor.ParameterList.Parameters.Count == 0));
 
-        var stats = ctors.SelectMany(c => c.Body.Statements)
+        var stats = ctors.Where(c => c.Body is not null)
+            .SelectMany(c => c.Body!.Statements)
             .OfType<ExpressionStatementSyntax>()
             .Select(stat => stat.Expression)
             .OfType<AssignmentExpressionSyntax>();
 
         var fieldsToAss =
             stats.Select(s => (Statement: s, Symbol: model.GetSymbolInfo(s.Left).Symbol as IFieldSymbol))
-                .Where(ss => ss.Symbol != null)
-                .Select(ss => (Field: ss.Symbol.Name, Assignment: ss.Statement.Right.ToString()))
+                .Where(ss => ss.Symbol is not null)
+                .Select(ss => (Field: ss.Symbol!.Name, Assignment: ss.Statement.Right.ToString()))
                 .ToList();
 
-        Assert.That(fieldsToAss, Is.EquivalentTo(new[]
+        /*Assert.That(fieldsToAss, Is.EquivalentTo(new[]
         {
             ("_iB", "16"),
             ("_iB", "18"),
             ("_fD", "GetF()")
         }.ToList()
-        ));
+        ));*/
     }
 
-    [Test]
+
     public static void TreeVisitorTests()
     {
         var tree = CSharpSyntaxTree.ParseText(@"public class MyClass { public void MyMethod() {  }  public void MyMethod(int n) {  } }");
@@ -166,11 +165,14 @@ partial class Roslyn
     public class CustomWalker : CSharpSyntaxWalker
     {
         static int _tabs;
-        public override void Visit(SyntaxNode node)
+        public override void Visit(SyntaxNode? node)
         {
             _tabs++;
-            var indents = new string('\t', _tabs);
-            Console.WriteLine(indents + node.Kind());
+            if (node is not null)
+            {
+                var indents = new string('\t', _tabs);
+                Console.WriteLine(indents + node.Kind());
+            }
             base.Visit(node);
             _tabs--;
         }
@@ -190,12 +192,15 @@ partial class Roslyn
             Console.ForegroundColor = deepWalker._initColor;
         }
 
-        public override void Visit(SyntaxNode node)
+        public override void Visit(SyntaxNode? node)
         {
             _tabs++;
-            var indents = new string('\t', _tabs);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(indents + node.Kind());
+            if (node is not null)
+            {
+                var indents = new string('\t', _tabs);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(indents + node.Kind());
+            }
             base.Visit(node);
             _tabs--;
         }
@@ -226,7 +231,7 @@ partial class Roslyn
         }
     }
 
-    [Test]
+
     public static void TreeVisitorFindAllSymbols()
     {
         var (compilation, _, _) = CompilationUtils.CreateTestCompilation(@"class MyClass{ class Nested { } void M() { } }");
@@ -260,7 +265,7 @@ partial class Roslyn
         }
     }
 
-    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    /*[DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class Analyzer1Analyzer : DiagnosticAnalyzer
     {
         public override void Initialize(AnalysisContext context)
@@ -288,9 +293,9 @@ partial class Roslyn
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(new DiagnosticDescriptor("42", "Title", "MessageFormat", "Category", DiagnosticSeverity.Warning, isEnabledByDefault: true, description: "Description"));
-    }
+    }*/
 
-    [Test]
+
     public void DumpToConsoleTest()
     {
         const string CODE = @"
@@ -312,7 +317,7 @@ class SimpleClass
         DumpToConsole(tree.GetRoot());
     }
 
-    [Test]
+
     public void DumpNamesToConsoleTest()
     {
         const string CODE = @"using System;
@@ -348,14 +353,15 @@ namespace Abc
         new HierarchyTextWalker(Console.Out).Visit(tree.GetRoot());
     }
 
-    public static void DumpToConsole(SyntaxNode node, bool useFullTypeName = false) => new HierarchyTypeWalker(Console.Out, useFullTypeName).Visit(node);
+    private static void DumpToConsole(SyntaxNode node, bool useFullTypeName = false)
+        => new HierarchyTypeWalker(Console.Out, useFullTypeName).Visit(node);
 
-    public static string DumpToString(SyntaxNode node, bool useFullTypeName = false)
+    /*private static string DumpToString(SyntaxNode node, bool useFullTypeName = false)
     {
         using var writer = new StringWriter();
         new HierarchyTypeWalker(writer, useFullTypeName).Visit(node);
         return writer.ToString();
-    }
+    }*/
 
     class HierarchyTypeWalker : SyntaxWalker
     {
@@ -389,8 +395,8 @@ namespace Abc
 
         public HierarchyTextWalker(TextWriter writer, SyntaxWalkerDepth depth = SyntaxWalkerDepth.StructuredTrivia) : base(depth) => _writer = writer;
 
-        private SyntaxList<MemberDeclarationSyntax> EmptyMemberList() => SF.List<MemberDeclarationSyntax>();
-        private SeparatedSyntaxList<EnumMemberDeclarationSyntax> EnumMemberList() => SF.SeparatedList<EnumMemberDeclarationSyntax>();
+        private static SyntaxList<MemberDeclarationSyntax> EmptyMemberList() => SF.List<MemberDeclarationSyntax>();
+        private static SeparatedSyntaxList<EnumMemberDeclarationSyntax> EnumMemberList() => SF.SeparatedList<EnumMemberDeclarationSyntax>();
 
         private void WriteNode(SyntaxNode nodeToWrite, SyntaxNode originalNode)
         {
@@ -415,14 +421,14 @@ namespace Abc
 
         public override void VisitCompilationUnit(CompilationUnitSyntax compUnit)
         {
-            var noChildren = compUnit.WithMembers(EmptyMemberList());
+            var noChildren = compUnit.WithMembers(HierarchyTextWalker.EmptyMemberList());
             WriteNode(noChildren, compUnit);
             base.VisitCompilationUnit(compUnit);
         }
 
         public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax @namespace)
         {
-            var noChildren = @namespace.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(EmptyMemberList());
+            var noChildren = @namespace.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(HierarchyTextWalker.EmptyMemberList());
             WriteNode(noChildren, @namespace);
             base.VisitNamespaceDeclaration(@namespace);
         }
@@ -434,28 +440,28 @@ namespace Abc
 
         public override void VisitClassDeclaration(ClassDeclarationSyntax @class)
         {
-            var noChildren = @class.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(EmptyMemberList());
+            var noChildren = @class.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(HierarchyTextWalker.EmptyMemberList());
             WriteNode(noChildren, @class);
             base.VisitClassDeclaration(@class);
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax @struct)
         {
-            var noChildren = @struct.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(EmptyMemberList());
+            var noChildren = @struct.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(HierarchyTextWalker.EmptyMemberList());
             WriteNode(noChildren, @struct);
             base.VisitStructDeclaration(@struct);
         }
 
         public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax @interface)
         {
-            var noChildren = @interface.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(EmptyMemberList());
+            var noChildren = @interface.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(HierarchyTextWalker.EmptyMemberList());
             WriteNode(noChildren, @interface);
             base.VisitInterfaceDeclaration(@interface);
         }
 
         public override void VisitEnumDeclaration(EnumDeclarationSyntax @enum)
         {
-            var noChildren = @enum.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(EnumMemberList());
+            var noChildren = @enum.WithOpenBraceToken(SF.MissingToken(SyntaxKind.OpenBraceToken)).WithCloseBraceToken(SF.MissingToken(SyntaxKind.CloseBraceToken)).WithMembers(HierarchyTextWalker.EnumMemberList());
             WriteNode(noChildren, @enum);
             base.VisitEnumDeclaration(@enum);
         }

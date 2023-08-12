@@ -93,9 +93,11 @@ class SymbolUtilsTests
         Assert.That(metas, Does.ContainKey(fieldName), "BAD TEST DATA");
 
         var meta = metas[fieldName];
-
-        Assert.That(meta.Type.Name, Is.EqualTo(expectedType));
-        Assert.That(meta.Initializer, Is.EqualTo(expectedInit));
+        Assert.Multiple(() =>
+        {
+            Assert.That(meta.Type.Name, Is.EqualTo(expectedType));
+            Assert.That(meta.Initializer, Is.EqualTo(expectedInit));
+        });
     }
 
     private static IEnumerable<TCD> GetLocalVariables_ShouldHandleTypes_TestCases() => new (string varName, string expectedType)[]
@@ -120,22 +122,23 @@ class SymbolUtilsTests
         Assert.That(metas[varName].Type.Name, Is.EqualTo(expectedType));
     }
 
-    private static IEnumerable<TCD> GetLocalVariables_ShouldHandleInitializers_TestCases() => new (string varName, string expectedInit)[]
-    {
-        ("integerInferred", "15"),
-        ("floatInferred", "15.5f"),
-        ("i", "60"),
-        ("s1", null),
-        ("s2", "\"ABC\""),
-        ("s3", "null"),
-        ("noInit", null)
-    }.Select(
-        tuple => new TCD(tuple.varName, tuple.expectedInit)
-        //{ TestName = $"{tuple.varName} init with {tuple.expectedInit}" }
-        //.SetName($"{tuple.varName} init with {tuple.expectedInit}")
-    );
+    private static IEnumerable<TCD> GetLocalVariables_ShouldHandleInitializers_TestCases()
+        => new (string varName, string? expectedInit)[]
+        {
+            ("integerInferred", "15"),
+            ("floatInferred", "15.5f"),
+            ("i", "60"),
+            ("s1", null),
+            ("s2", "\"ABC\""),
+            ("s3", "null"),
+            ("noInit", null)
+        }.Select(
+            tuple => new TCD(tuple.varName, tuple.expectedInit)
+            //{ TestName = $"{tuple.varName} init with {tuple.expectedInit}" }
+            //.SetName($"{tuple.varName} init with {tuple.expectedInit}")
+        );
     [TestCaseSource(nameof(GetLocalVariables_ShouldHandleInitializers_TestCases))]
-    public void GetLocalVariables_ShouldHandleInitializers(string varName, string expectedInit)
+    public void GetLocalVariables_ShouldHandleInitializers(string varName, string? expectedInit)
     {
         var method = _class.DescendantNodes().OfType<MethodDeclarationSyntax>().First(m => m.Identifier.ValueText == "MethodWithVariableDeclarations");
         var metas = LocalVariableMeta.GetLocalVariables(method, _model).ToList().ToDictionary(m => m.Name);

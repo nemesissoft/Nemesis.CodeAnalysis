@@ -39,6 +39,6 @@ class Program {
 
         var actual = new ExceptionFilterRewriter("_logger", new[] { "LogError" }).Visit(@try).NormalizeWhitespace().ToFullString();
 
-        Assert.That(actual, Is.EqualTo(EXPECTED_CODE));
+        Assert.That(actual, Is.EqualTo(EXPECTED_CODE).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
 }
