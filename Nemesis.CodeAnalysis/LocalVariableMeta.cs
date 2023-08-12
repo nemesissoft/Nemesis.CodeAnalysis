@@ -74,15 +74,9 @@ public sealed record LocalVariableMeta(string DeclaredInMethod, string Name, Sim
     {
         if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
-        var declaredInMethodComparison = string.Compare(DeclaredInMethod, other.DeclaredInMethod, StringComparison.Ordinal);
-        if (declaredInMethodComparison != 0) return declaredInMethodComparison;
-        var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
-        if (nameComparison != 0) return nameComparison;
-        var typeComparison = Type.CompareTo(other.Type);
-        if (typeComparison != 0) return typeComparison;
-        var initializerComparison = string.Compare(Initializer, other.Initializer, StringComparison.Ordinal);
-        if (initializerComparison != 0) return initializerComparison;
-        return string.Compare(Documentation, other.Documentation, StringComparison.Ordinal);
+        return (DeclaredInMethod, Name, Type, Initializer, Documentation).CompareTo(
+            (other.DeclaredInMethod, other.Name, other.Type, other.Initializer, other.Documentation)
+            );
     }
 
     public int CompareTo(object? obj) => obj switch

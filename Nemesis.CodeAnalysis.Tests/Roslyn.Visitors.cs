@@ -352,11 +352,9 @@ namespace Abc
 
     public static string DumpToString(SyntaxNode node, bool useFullTypeName = false)
     {
-        using (var writer = new StringWriter())
-        {
-            new HierarchyTypeWalker(writer, useFullTypeName).Visit(node);
-            return writer.ToString();
-        }
+        using var writer = new StringWriter();
+        new HierarchyTypeWalker(writer, useFullTypeName).Visit(node);
+        return writer.ToString();
     }
 
     class HierarchyTypeWalker : SyntaxWalker
@@ -607,17 +605,12 @@ namespace Abc
         private UnicodeCharacterEscapingSyntaxRewriter() { }
 
         public override SyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node)
-        {
-            switch (node.Kind())
+            => node.Kind() switch
             {
-                case SyntaxKind.StringLiteralExpression:
-                    return RewriteStringLiteralExpression(node);
-                case SyntaxKind.CharacterLiteralExpression:
-                    return RewriteCharacterLiteralExpression(node);
-            }
-
-            return node;
-        }
+                SyntaxKind.StringLiteralExpression => RewriteStringLiteralExpression(node),
+                SyntaxKind.CharacterLiteralExpression => RewriteCharacterLiteralExpression(node),
+                _ => node,
+            };
 
         private static SyntaxNode RewriteStringLiteralExpression(LiteralExpressionSyntax node)
         {

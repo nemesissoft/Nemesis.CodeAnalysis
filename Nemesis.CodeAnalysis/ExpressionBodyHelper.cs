@@ -40,7 +40,7 @@ internal abstract class ExpressionBodyHelper<TDeclaration> where TDeclaration : 
         TryConvertToExpressionBody(declaration, ExpressionBodyPreference.WhenPossible,
             out var expressionBody, out var semicolonToken);
 
-        var trailingTrivia = semicolonToken.TrailingTrivia.Where(t => t.Kind() != SyntaxKind.EndOfLineTrivia).Concat(declaration.GetTrailingTrivia());
+        var trailingTrivia = semicolonToken.TrailingTrivia.Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia)).Concat(declaration.GetTrailingTrivia());
         semicolonToken = semicolonToken.WithTrailingTrivia(trailingTrivia);
 
         return WithSemicolonToken(WithExpressionBody(WithBody(declaration, null), expressionBody), semicolonToken);

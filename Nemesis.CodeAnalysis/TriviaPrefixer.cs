@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using System.Diagnostics;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Nemesis.CodeAnalysis
@@ -21,9 +16,9 @@ namespace Nemesis.CodeAnalysis
                 base.VisitList(list);
         }
 
-        private TriviaReducer(){}
+        private TriviaReducer() { }
 
-        public static TNode Reduce<TNode>(TNode node) where TNode : SyntaxNode => (TNode) new TriviaReducer().Visit(node);
+        public static TNode Reduce<TNode>(TNode node) where TNode : SyntaxNode => (TNode)new TriviaReducer().Visit(node);
     }
 
     public class TriviaFlattener : CSharpSyntaxRewriter
@@ -37,7 +32,7 @@ namespace Nemesis.CodeAnalysis
             bool isMethodBaseTrivia = list[0].Token.Parent is BaseMethodDeclarationSyntax;
 
             var originalTriviaWithNoWhitespace = (
-                isMethodBaseTrivia ? list : list.Where(t => t.Kind() != SyntaxKind.WhitespaceTrivia && t.Kind() != SyntaxKind.EndOfLineTrivia)
+                isMethodBaseTrivia ? list : list.Where(t => !t.IsKind(SyntaxKind.WhitespaceTrivia) && !t.IsKind(SyntaxKind.EndOfLineTrivia))
             ).ToList();
 
             if (!originalTriviaWithNoWhitespace.Any())
@@ -58,7 +53,7 @@ namespace Nemesis.CodeAnalysis
         private TriviaPrefixer(IEnumerable<SyntaxTrivia> leading, bool visitIntoStructuredTrivia = false) : base(visitIntoStructuredTrivia)
             => _leading = leading?.ToArray() ?? new SyntaxTrivia[0];
 
-        public static TNode Prepend<TNode>(TNode node, IEnumerable<SyntaxTrivia> leading) where TNode : SyntaxNode => 
+        public static TNode Prepend<TNode>(TNode node, IEnumerable<SyntaxTrivia> leading) where TNode : SyntaxNode =>
             (TNode)new TriviaPrefixer(leading).Visit(node);
 
         #region Declarations
@@ -86,12 +81,12 @@ namespace Nemesis.CodeAnalysis
 
         public override SyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node) =>
             base.VisitEventFieldDeclaration(PrependDeclaration(node));
-        
+
         private TNode PrependDeclaration<TNode>(TNode node) where TNode : SyntaxNode
         {
             var originalTrivia = node.GetLeadingTrivia();
             var leadingTriviaWithSpecialWhitespace = originalTrivia.SelectMany(trivia =>
-                trivia.Kind() == SyntaxKind.WhitespaceTrivia ? _leading : new[] { trivia }).ToList();
+                trivia.IsKind(SyntaxKind.WhitespaceTrivia) ? _leading : new[] { trivia }).ToList();
 
             node = node.WithLeadingTrivia(SF.TriviaList(leadingTriviaWithSpecialWhitespace));
 

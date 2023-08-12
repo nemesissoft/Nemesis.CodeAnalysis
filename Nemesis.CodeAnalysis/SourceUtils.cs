@@ -241,10 +241,10 @@ public static class SourceUtils
 
     public static bool InBetweenTwoMembers(SyntaxToken previousToken, SyntaxToken currentToken)
     {
-        if (previousToken.Kind() != SyntaxKind.SemicolonToken && previousToken.Kind() != SyntaxKind.CloseBraceToken)
+        if (!previousToken.IsKind(SyntaxKind.SemicolonToken) && !previousToken.IsKind(SyntaxKind.CloseBraceToken))
             return false;
 
-        if (currentToken.Kind() == SyntaxKind.CloseBraceToken)
+        if (currentToken.IsKind(SyntaxKind.CloseBraceToken))
             return false;
 
         var previousMember = GetEnclosingMember(previousToken);
@@ -257,7 +257,7 @@ public static class SourceUtils
 
     public static MemberDeclarationSyntax GetEnclosingMember(SyntaxToken token)
     {
-        if (token.Kind() == SyntaxKind.CloseBraceToken && (token.Parent.Kind() == SyntaxKind.Block || token.Parent.Kind() == SyntaxKind.AccessorList))
+        if (token.IsKind(SyntaxKind.CloseBraceToken) && (token.Parent.IsKind(SyntaxKind.Block) || token.Parent.IsKind(SyntaxKind.AccessorList)))
             return token.Parent.Parent as MemberDeclarationSyntax;
         return token.Parent.FirstAncestorOrSelf<MemberDeclarationSyntax>();
     }

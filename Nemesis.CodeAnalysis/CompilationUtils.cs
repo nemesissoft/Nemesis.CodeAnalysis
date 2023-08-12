@@ -1,4 +1,4 @@
-﻿//#nullable enable
+﻿#nullable enable
 
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -14,35 +14,34 @@ public static class CompilationUtils
 {
     #region Evaluation
 
-    public static bool TryEvaluateExpression(string code, out string result)
+    public static async Task<(bool Success, string? Result)> TryEvaluateExpression(string code)
     {
         try
         {
             var scriptOptions = ScriptOptions.Default;
-            result = CSharpScript.EvaluateAsync(code, scriptOptions).Result?.ToString();
-            return true;
+            var result = await CSharpScript.EvaluateAsync(code, scriptOptions);
+            return (true, result?.ToString());
         }
         catch (Exception e)
         {
-            result = $"<error in '{code}' {e.Message}>";
-            return false;
+            return (false, $"<error in '{code}' {e.Message}>");
         }
     }
 
-    public static Type GetTypeFromCSharpName(string typeName, IEnumerable<string> additionalNamespaces = null, params Assembly[] additionalAssemblies)
+    public static Type GetTypeFromCSharpName(string typeName, IEnumerable<string>? additionalNamespaces = null, params Assembly[] additionalAssemblies)
     {
         var standardNamespaces = new[] { "System", "System.Linq", "System.Collections.Generic" };
 
         var scriptOptions = ScriptOptions.Default
             .AddReferences(new[] { typeof(object).Assembly, typeof(Enumerable).Assembly }.Concat(additionalAssemblies))
-            .AddImports(additionalNamespaces == null ? standardNamespaces : standardNamespaces.Concat(additionalNamespaces));
+            .AddImports(additionalNamespaces is null ? standardNamespaces : standardNamespaces.Concat(additionalNamespaces));
 
         var state = CSharpScript.RunAsync<Type>($"typeof({typeName})", scriptOptions).Result;
         return state.ReturnValue;
     }
 
     private static readonly ConcurrentDictionary<string, Type> _nameToTypeMap = new();
-    public static Type GetTypeFromCSharpNameCached(string csharpName, IEnumerable<string> additionalNamespaces = null, params Assembly[] additionalAssemblies)
+    public static Type GetTypeFromCSharpNameCached(string csharpName, IEnumerable<string>? additionalNamespaces = null, params Assembly[] additionalAssemblies)
         => _nameToTypeMap.GetOrAdd(csharpName,
             name => GetTypeFromCSharpName(name, additionalNamespaces, additionalAssemblies)
         );
@@ -67,7 +66,7 @@ public static class CompilationUtils
 
 
     public static (Compilation compilation, SyntaxTree sourceTree, SemanticModel semanticModel) CreateTestCompilation(
-        string source, Assembly[] additionalAssemblies = null, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, [CallerMemberName] string memberName = null)
+        string source, Assembly[]? additionalAssemblies = null, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, [CallerMemberName] string? memberName = null)
     {
 
         var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location) ?? throw new InvalidOperationException("The location of the .NET assemblies cannot be retrieved");
@@ -83,7 +82,7 @@ public static class CompilationUtils
         };
 
 
-        if (additionalAssemblies != null)
+        if (additionalAssemblies is not null)
             foreach (var ass in additionalAssemblies)
                 references.Add(MetadataReference.CreateFromFile(ass.Location));
 

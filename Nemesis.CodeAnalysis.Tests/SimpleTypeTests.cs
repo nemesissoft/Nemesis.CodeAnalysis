@@ -136,12 +136,12 @@ namespace TestNamespace
     public void ExtractNamespaces_ShouldExtractNestedNamespaces(string symbolName, string expectedNamespacesText)
     {
         var expectedNamespaces = new SortedSet<string>(expectedNamespacesText.Split(';'));
-        var symbolMeta = _namespaceFields.SingleOrDefault(p => p.Name == symbolName);
+        var (_, TypeSymbol) = _namespaceFields.SingleOrDefault(p => p.Name == symbolName);
         Assert.That(symbolName, Is.Not.Null, "Initialization error");
         var namespaces = new SortedSet<string>();
 
 
-        SimpleType.ExtractNamespaces(symbolMeta.TypeSymbol, namespaces);
+        SimpleType.ExtractNamespaces(TypeSymbol, namespaces);
 
 
         Assert.That(namespaces, Is.EquivalentTo(expectedNamespaces));

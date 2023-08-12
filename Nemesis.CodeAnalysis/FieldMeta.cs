@@ -46,15 +46,10 @@ public sealed record FieldMeta(string DeclaredInClass, string FieldName, SimpleT
     {
         if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
-        var declaredInClassComparison = string.Compare(DeclaredInClass, other.DeclaredInClass, StringComparison.Ordinal);
-        if (declaredInClassComparison != 0) return declaredInClassComparison;
-        var fieldNameComparison = string.Compare(FieldName, other.FieldName, StringComparison.Ordinal);
-        if (fieldNameComparison != 0) return fieldNameComparison;
-        var typeComparison = Type.CompareTo(other.Type);
-        if (typeComparison != 0) return typeComparison;
-        var initializerComparison = string.Compare(Initializer, other.Initializer, StringComparison.Ordinal);
-        if (initializerComparison != 0) return initializerComparison;
-        return string.Compare(Documentation, other.Documentation, StringComparison.Ordinal);
+
+        return (DeclaredInClass, FieldName, Type, Initializer, Documentation).CompareTo(
+            (other.DeclaredInClass, other.FieldName, other.Type, other.Initializer, other.Documentation)
+            );
     }
 
     public int CompareTo(object? obj) => obj switch

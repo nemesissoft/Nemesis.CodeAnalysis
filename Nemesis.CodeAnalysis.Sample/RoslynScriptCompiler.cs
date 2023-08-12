@@ -3,12 +3,10 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.CodeAnalysis.Emit;
 
-namespace Nemesis.CodeAnalysis.Tests;
+namespace Nemesis.CodeAnalysis.Sample;
 
-[TestFixture]
 class RoslynScriptCompiler
 {
-    [Test, Explicit]
     public void SampleCompilation()
     {
         //var compiler1 = new CodeDomCompiler();
@@ -150,7 +148,7 @@ public class RoslynCompilationException : Exception
     {
         if (info == null) throw new ArgumentNullException(nameof(info));
 
-        Result = (EmitResult)info.GetValue("Result", typeof(EmitResult));
+        Result = (EmitResult)(info.GetValue("Result", typeof(EmitResult)) ?? throw new("No result found"));
     }
 
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -199,7 +197,7 @@ public class CompilerInstructions : ICompilerInstructions
 
     public IEnumerable<string> AssemblyLocations { get; }
 
-    public CompilerInstructions(string code, string className, IEnumerable<string> assemblyLocations = null)
+    public CompilerInstructions(string code, string className, IEnumerable<string>? assemblyLocations = null)
     {
         Code = code;
         ClassName = className;
@@ -213,9 +211,9 @@ public static class CompilerExtensions
     {
         var assembly = compiler.Compile(instructions.Code, instructions.AssemblyLocations);
 
-        var type = assembly.GetType(instructions.ClassName);
+        var type = assembly.GetType(instructions.ClassName) ?? throw new($"'{instructions.ClassName}' type cannot be found");
 
-        return Activator.CreateInstance(type, constructorParameters);
+        return Activator.CreateInstance(type, constructorParameters) ?? throw new("Type cannot be instantiated");
     }
 
     public static T CompileAndCreateObject<T>(this ICompiler compiler, ICompilerInstructions instructions, params object[] constructorParameters) =>

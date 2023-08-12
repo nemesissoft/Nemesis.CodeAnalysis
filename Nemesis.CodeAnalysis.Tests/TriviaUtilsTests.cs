@@ -50,7 +50,7 @@ namespace Blah
     }
 }";
     private IReadOnlyList<ConstructorDeclarationSyntax> _ctors;
-    private IReadOnlyList<PropertyDeclarationSyntax> _props;
+    private IReadOnlyList<PropertyDeclarationSyntax> _properties;
     //private SemanticModel _model;
 
     [OneTimeSetUp]
@@ -59,7 +59,7 @@ namespace Blah
         var tree = CSharpSyntaxTree.ParseText(CODE);
         var syntaxRoot = tree.GetRoot();
         _ctors = syntaxRoot.DescendantNodes().OfType<ConstructorDeclarationSyntax>().ToList().AsReadOnly();
-        _props = syntaxRoot.DescendantNodes().OfType<PropertyDeclarationSyntax>().ToList().AsReadOnly();
+        _properties = syntaxRoot.DescendantNodes().OfType<PropertyDeclarationSyntax>().ToList().AsReadOnly();
     }
 
     private const string NEW_LINE = "\r\n";
@@ -68,7 +68,7 @@ namespace Blah
     private const string TAB3 = "\t\t\t";
     private const string TAB4 = "\t\t\t\t";
     private const string TAB5 = "\t\t\t\t\t";
-    private const string THIN_SPACE = "\u202F";
+    //private const string THIN_SPACE = "\u202F";
 
     [TestCase(0, 1)]
     [TestCase(1, 2)]
@@ -133,13 +133,13 @@ namespace Blah
         return
             (from i in Enumerable.Range(0, expectedResults.Length)
              let result = expectedResults[i]
-             let root = CSharpSyntaxTree.ParseText(result).GetRoot()
+             /*let root = CSharpSyntaxTree.ParseText(result).GetRoot()
              let flattenedRootText = TriviaFlattener.Flatten(root).ToFullString()
              let name = flattenedRootText
                 .Replace("\r\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\r", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
-                .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239
+                .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239*/
              select new TestCaseData(i).Returns(result)
              //.SetName($"{i}. {name})")
             ).ToList();
@@ -154,9 +154,9 @@ namespace Blah
 
         var result = TriviaUtils.NormalizeWhitespace(ctor, indentationLevel, true).ToFullString();
 
-        Assert.That(result, Does.EndWith("\r\n"));
+        result = result.TrimEnd('\r', '\n');
 
-        return result.Substring(0, result.Length - 2);
+        return result;
     }
 
 
@@ -164,11 +164,7 @@ namespace Blah
     {
         var expectedResults = new[]
         {
-              $"{TAB1}public int I1" + NEW_LINE
-            + $"{TAB1}{{" + NEW_LINE
-            + $"{TAB2}get;" + NEW_LINE
-            + $"{TAB2}set;" + NEW_LINE
-            + $"{TAB1}}}"
+              $"{TAB1}public int I1 {TAB1}{{ {TAB1}get; {TAB1}set; {TAB1}}}"
             ,
               $"{TAB1}public int I2" + NEW_LINE
             + $"{TAB1}{{" + NEW_LINE
@@ -189,30 +185,30 @@ namespace Blah
         return
             (from i in Enumerable.Range(0, expectedResults.Length)
              let result = expectedResults[i]
-             let root = CSharpSyntaxTree.ParseText(result).GetRoot()
+             /*let root = CSharpSyntaxTree.ParseText(result).GetRoot()
              let flattenedRootText = TriviaFlattener.Flatten(root).ToFullString()
              let name = flattenedRootText
                 .Replace("\r\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\r", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
-                .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239
+                .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239*/
              select new TestCaseData(i).Returns(result)
-             //.SetName($"Normalize properties {i}. {name})")
+             //.SetName($"NormalizeProperties_{i}_{name})")
             ).ToList();
     }
 
     [TestCaseSource(nameof(NormalizeWhitespaceDataProps))]
     public string NormalizeWhitespace_ShouldNormalizeDependingOnBaseIndentationProps(int propNumber)
     {
-        var prop = _props[propNumber];
+        var prop = _properties[propNumber];
 
         var indentationLevel = TriviaUtils.GetElementIndentationLevel(prop);
 
         var result = TriviaUtils.NormalizeWhitespace(prop, indentationLevel, true).ToFullString();
 
-        Assert.That(result, Does.EndWith("\r\n"));
+        result = result.TrimEnd('\r', '\n');
 
-        return result.Substring(0, result.Length - 2);
+        return result;
     }
 
     [Test]

@@ -1,8 +1,17 @@
-﻿namespace Nemesis.CodeAnalysis.Tests;
+﻿using System.Globalization;
+using NUnit.Framework.Internal;
+
+namespace Nemesis.CodeAnalysis.Tests;
 
 [TestFixture]
 public class CompilationUtilsTests
 {
+    [OneTimeSetUp]
+    public void BeforeAllTests()
+    {
+        TestExecutionContext.CurrentContext.CurrentCulture = CultureInfo.InvariantCulture;
+    }
+
     private static IEnumerable<TestCaseData> GetDataFor_TryEvaluateExpression()
     {
         var data = new (string In, string Out, bool ExpectedSuccess)[]
@@ -12,21 +21,24 @@ public class CompilationUtilsTests
             ("null + \"5\"", "5", true),
             ("\"1\" + \"2\"", "12", true),
             ("\"1\" + 2", "12", true),
-            ("London + 5", "THROW", false),
+            ("London + 5", "error CS0103: The name 'London' does not exist in the current context", false),
         };
         return data.Select((d, i) => new TestCaseData(d.In, d.Out).Returns(d.ExpectedSuccess)
             //.SetName($"{i + 1:00}. {d.In} => {d.Out ?? "∅"} {(d.ExpectedSuccess ? "positive" : "negative")}")
             ).ToList();
     }
     [TestCaseSource(nameof(GetDataFor_TryEvaluateExpression))]
-    public bool TryEvaluateExpressionTests(string code, string expectedResult)
+    public async Task<bool> TryEvaluateExpressionTestsAsync(string code, string expectedResult)
     {
-        bool success = CompilationUtils.TryEvaluateExpression(code, out var result);
+        var (success, result) = await CompilationUtils.TryEvaluateExpression(code);
 
         if (success)
             Assert.That(result, Is.EqualTo(expectedResult));
         else
+        {
             Assert.That(result, Does.StartWith("<error in"));
+            Assert.That(result, Does.Contain(expectedResult));
+        }
 
         return success;
     }
