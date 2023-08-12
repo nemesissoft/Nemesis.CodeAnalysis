@@ -14,7 +14,7 @@ public class CompilationUtilsTests
 
     private static IEnumerable<TestCaseData> GetDataFor_TryEvaluateExpression()
     {
-        var data = new (string In, string Out, bool ExpectedSuccess)[]
+        var data = new (string In, string? Out, bool ExpectedSuccess)[]
         {
             ("1 + 2", "3", true),
             ("null + 5", null, true),

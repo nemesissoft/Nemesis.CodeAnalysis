@@ -1,13 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
-
+		<TargetFrameworks>$(TargetFrameworks);netstandard2.0</TargetFrameworks>
+		
+		
+		<EnablePackageValidation>true</EnablePackageValidation>
+		<!-- Optional: Detect breaking changes from a previous version -->
+		<!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
 		<IsPackable>true</IsPackable>
-		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<PackageReadmeFile>properties\README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild> it's not compatible with dotnet pack on CI-->
 
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -17,8 +21,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="properties">
+			<Link>Properties\README.md</Link>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis" Version="4.6.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.6.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="MinVer" Version="4.3.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 
@@ -27,6 +42,4 @@
 			<_Parameter1>$(MSBuildProjectName).Tests, PublicKey=00240000048000001401000006020000002400005253413100080000010001000115739c587175283151f028cc762dfe89ed0741f626402880f1dd9d849d36b10b9f6ecf323e79713e090f973e04a974dd59af2ef12c01ef8ec3eb597a10733e3d465388c9cfb113b31e362474e96259c4f62db88350030dcfa815b9ce9412325b974d2a7d40df027d1b9f1e26609795936e31b9c47aba29d4e25f5fc383ecde530cd504868744b752766192cf74dfb961d1aa6e2063b8509f8f1de2b6833a7a24289eedaa9b6031db7a7f95bbe84f1537fc8c5d188abdda490ed047b3fa7b6d852e83b0f0f197d7d1e4cf7acfc88063d16ff2925d2013ccedfa8982f8223e31f403421ecd5a4426c03fd0ba58dd9cf34e742a5203665e25e5462180ce68ddab</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
-
-
 </Project>

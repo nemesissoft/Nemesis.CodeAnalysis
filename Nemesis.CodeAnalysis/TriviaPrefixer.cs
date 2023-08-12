@@ -51,7 +51,7 @@ namespace Nemesis.CodeAnalysis
         private readonly IEnumerable<SyntaxTrivia> _leading;
 
         private TriviaPrefixer(IEnumerable<SyntaxTrivia> leading, bool visitIntoStructuredTrivia = false) : base(visitIntoStructuredTrivia)
-            => _leading = leading?.ToArray() ?? new SyntaxTrivia[0];
+            => _leading = leading?.ToArray() ?? Array.Empty<SyntaxTrivia>();
 
         public static TNode Prepend<TNode>(TNode node, IEnumerable<SyntaxTrivia> leading) where TNode : SyntaxNode =>
             (TNode)new TriviaPrefixer(leading).Visit(node);

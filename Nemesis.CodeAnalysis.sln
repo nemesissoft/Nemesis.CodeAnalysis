@@ -9,12 +9,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.CodeAnalysis.Tests"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{5398C873-50BF-4E27-8BCF-FD1560621B1E}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
 		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
 		Nemesis.CodeAnalysis.Public.snk = Nemesis.CodeAnalysis.Public.snk
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nemesis.CodeAnalysis.Sample", "Nemesis.CodeAnalysis.Sample\Nemesis.CodeAnalysis.Sample.csproj", "{9925CEA3-C0A1-4FE1-99CA-69FA5FB5B9BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nemesis.CodeAnalysis.Sample", "Nemesis.CodeAnalysis.Sample\Nemesis.CodeAnalysis.Sample.csproj", "{9925CEA3-C0A1-4FE1-99CA-69FA5FB5B9BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CC1B784F-344F-48EB-90D1-7EEA4AFBF81C}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
