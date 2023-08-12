@@ -140,23 +140,23 @@ namespace Blah
                 .Replace("\r", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239*/
-             select new TestCaseData(i).Returns(result)
+             select new TestCaseData(i, result)
              //.SetName($"{i}. {name})")
             ).ToList();
     }
 
     [TestCaseSource(nameof(NormalizeWhitespaceDataCtors))]
-    public string NormalizeWhitespace_ShouldNormalizeDependingOnBaseIndentationCtors(int ctorNumber)
+    public void NormalizeWhitespace_ShouldNormalizeDependingOnBaseIndentationCtors(int ctorNumber, string expectedResult)
     {
         var ctor = _ctors[ctorNumber];
 
         var indentationLevel = TriviaUtils.GetElementIndentationLevel(ctor);
 
-        var result = TriviaUtils.NormalizeWhitespace(ctor, indentationLevel, true).ToFullString();
+        var actual = TriviaUtils.NormalizeWhitespace(ctor, indentationLevel, true).ToFullString();
 
-        result = result.TrimEnd('\r', '\n');
+        actual = actual.TrimEnd('\r', '\n');
 
-        return result;
+        Assert.That(actual, Is.EqualTo(expectedResult).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
 
 
@@ -192,23 +192,23 @@ namespace Blah
                 .Replace("\r", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\n", $"{THIN_SPACE}⏎{THIN_SPACE}")
                 .Replace("\t", "↦") // NL = \u23CE  TAB = \u21A6    THIN_SPACE = 8239*/
-             select new TestCaseData(i).Returns(result)
+             select new TestCaseData(i, result)
              //.SetName($"NormalizeProperties_{i}_{name})")
             ).ToList();
     }
 
     [TestCaseSource(nameof(NormalizeWhitespaceDataProps))]
-    public string NormalizeWhitespace_ShouldNormalizeDependingOnBaseIndentationProps(int propNumber)
+    public void NormalizeWhitespace_ShouldNormalizeDependingOnBaseIndentationProps(int propNumber, string expectedResult)
     {
         var prop = _properties[propNumber];
 
         var indentationLevel = TriviaUtils.GetElementIndentationLevel(prop);
 
-        var result = TriviaUtils.NormalizeWhitespace(prop, indentationLevel, true).ToFullString();
+        var actual = TriviaUtils.NormalizeWhitespace(prop, indentationLevel, true).ToFullString();
 
-        result = result.TrimEnd('\r', '\n');
+        actual = actual.TrimEnd('\r', '\n');
 
-        return result;
+        Assert.That(actual, Is.EqualTo(expectedResult).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
 
     [Test]
@@ -232,7 +232,7 @@ namespace Blah
           + $"{TAB1}    {TAB2}}}"
           + NEW_LINE;
 
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expected).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
 
     [Test]
@@ -259,6 +259,6 @@ namespace Blah
           + $"{TAB1}    {TAB2}}}"
           + NEW_LINE;
 
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expected).Using(IgnoreNewLinesComparer.EqualityComparer));
     }
 }
