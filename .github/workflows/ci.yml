@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: build
+name: 'CI'
 on:
   workflow_dispatch: 
   push:
