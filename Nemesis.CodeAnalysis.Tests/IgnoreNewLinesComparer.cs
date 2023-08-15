@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Nemesis.CodeAnalysis.Tests;
+﻿namespace Nemesis.CodeAnalysis.Tests;
 
 internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<string>
 {
@@ -14,7 +12,7 @@ internal class IgnoreNewLinesComparer : IComparer<string>, IEqualityComparer<str
     public bool Equals(string? x, string? y) =>
         NormalizeNewLines(x) == NormalizeNewLines(y);
 
-    public int GetHashCode([DisallowNull] string s) => NormalizeNewLines(s)?.GetHashCode() ?? 0;
+    public int GetHashCode(string s) => NormalizeNewLines(s)?.GetHashCode() ?? 0;
 
     private static string? NormalizeNewLines(string? s) => s
         ?.Replace("\r\n", "")

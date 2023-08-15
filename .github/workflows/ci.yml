@@ -26,6 +26,7 @@ jobs:
   create_nuget:
     runs-on: ubuntu-latest
     steps:
+    - run: Write-Host RUN FROM CI '$env:CI'
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
@@ -71,8 +72,7 @@ jobs:
               
       - name: Publish NuGet package
         run: |
-          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-              Write-Host "Pushing '$file' to NuGet"
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {              
               dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           } 
 

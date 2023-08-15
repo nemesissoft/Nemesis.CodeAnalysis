@@ -3,6 +3,7 @@
 		<Version>1.0.0</Version><!--This will get replaced by Build system -->
 		<LangVersion>11.0</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 
 
 		<Authors>Michał Bryłka</Authors>
