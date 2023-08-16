@@ -110,4 +110,97 @@ only=1
 shall=3
 stay=4*/"));
     }
+
+    [TestCase("C1,S1,E1,ROS1,RROS1,RS1,RRS1,R1", "First.Second")]
+    [TestCase("C2,S2,E2,ROS2,RROS2,RS2,RRS2,R2", "First.Second.Third.Fourth")]
+    [TestCase("C3,S3,E3,ROS3,RROS3,RS3,RRS3,R3", "First.Second.Third.Fourth.Fifth")]
+    public static void GetNamespace_ShouldReturnValidNamespace_StandardNamespaces(string typeNamesText, string expectedNamespace)
+    {
+        const string code = """
+            namespace First.Second
+            {
+                class C1 {}
+                struct S1 {}
+                enum E1 {}
+                readonly struct ROS1 {}
+                readonly ref struct RROS1 {}
+                record struct RS1 {}
+                readonly record struct RRS1 {}
+                record R1 {}
+
+                namespace Third.Fourth 
+                {
+                    class C2 {}
+                    struct S2 {}
+                    enum E2 {}
+                    readonly struct ROS2 {}
+                    readonly ref struct RROS2 {}
+                    record struct RS2 {}
+                    readonly record struct RRS2 {}
+                    record R2 {}
+
+                    namespace Fifth 
+                    {
+                        class C3 {}
+                        struct S3 {}
+                        enum E3 {}
+                        readonly struct ROS3 {}
+                        readonly ref struct RROS3 {}
+                        record struct RS3 {}
+                        readonly record struct RRS3 {}
+                        record R3 {}                    
+                    }
+                }
+            }
+            """;
+        GetNamespace_ShouldReturnValidNamespace_Helper(typeNamesText, expectedNamespace, code);
+    }
+
+    [TestCase("C1,S1,E1,ROS1,RROS1,RS1,RRS1,R1", "FileScoped")]
+    public static void GetNamespace_ShouldReturnValidNamespace_FileScopedNamespaces(string typeNamesText, string expectedNamespace)
+    {
+        const string code = """
+            namespace FileScoped;
+            
+            class C1 {}
+            struct S1 {}
+            enum E1 {}
+            readonly struct ROS1 {}
+            readonly ref struct RROS1 {}
+            record struct RS1 {}
+            readonly record struct RRS1 {}
+            record R1 {}
+            """;
+        GetNamespace_ShouldReturnValidNamespace_Helper(typeNamesText, expectedNamespace, code);
+    }
+
+    [TestCase("C1,S1,E1,ROS1,RROS1,RS1,RRS1,R1", "")]
+    public static void GetNamespace_ShouldReturnValidNamespace_DefaultNamespaces(string typeNamesText, string expectedNamespace)
+    {
+        const string code = """
+            class C1 {}
+            struct S1 {}
+            enum E1 {}
+            readonly struct ROS1 {}
+            readonly ref struct RROS1 {}
+            record struct RS1 {}
+            readonly record struct RRS1 {}
+            record R1 {}
+            """;
+        GetNamespace_ShouldReturnValidNamespace_Helper(typeNamesText, expectedNamespace, code);
+    }
+
+    private static void GetNamespace_ShouldReturnValidNamespace_Helper(string typeNamesText, string expectedNamespace, string code)
+    {
+        var (_, sourceTree, _) = CompilationUtils.CreateTestCompilation(code);
+
+        var typeNames = typeNamesText.Split(',');
+
+        var types = sourceTree.GetRoot().DescendantNodes().OfType<BaseTypeDeclarationSyntax>()
+            .Where(t => typeNames.Contains(t.Identifier.Text))
+            .ToList();
+        var namespaces = types.Select(t => t.GetNamespace()).ToList();
+
+        Assert.That(namespaces, Is.All.EqualTo(expectedNamespace));
+    }
 }

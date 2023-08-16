@@ -1,8 +1,9 @@
-﻿namespace Nemesis.CodeAnalysis;
+﻿#nullable enable
+namespace Nemesis.CodeAnalysis;
 
 public static class SyntaxNodeUtils
 {
-    public static TParentType ParentOfType<TParentType>(this SyntaxNode current) where TParentType : SyntaxNode
+    public static TParentType? ParentOfType<TParentType>(this SyntaxNode current) where TParentType : SyntaxNode
     {
         while (current.Parent != null)
         {
@@ -14,13 +15,11 @@ public static class SyntaxNodeUtils
 
     public static TypeDeclarationSyntax GetParentType(this SyntaxNode node) => node.Ancestors().OfType<TypeDeclarationSyntax>().First();
 
-    public static bool IsNameOfExpression(this InvocationExpressionSyntax invocation, SemanticModel model)
-    {
-        return invocation.Expression is IdentifierNameSyntax ident &&
-               ident.Identifier.ValueText == "nameof" &&
-               !invocation.Ancestors().OfType<MemberAccessExpressionSyntax>().Any() &&
-               ModelExtensions.GetSymbolInfo(model, invocation) is { } si && si.Symbol == null && si.CandidateSymbols.IsEmpty;
-    }
+    public static bool IsNameOfExpression(this InvocationExpressionSyntax invocation, SemanticModel model) =>
+        invocation.Expression is IdentifierNameSyntax ident &&
+        ident.Identifier.ValueText == "nameof" &&
+        !invocation.Ancestors().OfType<MemberAccessExpressionSyntax>().Any() &&
+        ModelExtensions.GetSymbolInfo(model, invocation) is { } si && si.Symbol == null && si.CandidateSymbols.IsEmpty;
 
     /// <summary>Determines whether the specified TypeSyntax is actually 'var'. </summary>
     public static bool IsTypeInferred(this TypeSyntax typeSyntax, SemanticModel semanticModel)
@@ -42,7 +41,7 @@ public static class SyntaxNodeUtils
         node as CompilationUnitSyntax ?? node.SyntaxTree.GetCompilationUnitRoot();
 
     #region Tree manipulations
-
+#nullable disable
     public static TType RemoveFieldVariables<TType>(TType type, IReadOnlyCollection<string> fieldVariablesToRemove, bool createTypeCommentsOutOfRemovedVariables = false) where TType : TypeDeclarationSyntax
     {
         const SyntaxRemoveOptions REMOVE_OPTIONS = SyntaxRemoveOptions.KeepDirectives | SyntaxRemoveOptions.KeepUnbalancedDirectives;
@@ -81,6 +80,40 @@ public static class SyntaxNodeUtils
 
         return type;
     }
+#nullable enable
 
     #endregion
+
+    /// <summary>
+    /// Get the namespace given type is declared in or empty string denoting "default namespace"
+    /// </summary>
+    public static string GetNamespace(this BaseTypeDeclarationSyntax syntax)
+    {
+        string nameSpace = string.Empty;
+
+        SyntaxNode? potentialNamespaceParent = syntax.Parent;
+
+        while (potentialNamespaceParent != null &&
+                potentialNamespaceParent is not NamespaceDeclarationSyntax
+                && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
+        {
+            potentialNamespaceParent = potentialNamespaceParent.Parent;
+        }
+
+        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
+        {
+            nameSpace = namespaceParent.Name.ToString();
+
+            while (true)
+            {
+                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
+                    break;
+
+                namespaceParent = parent;
+                nameSpace = $"{namespaceParent.Name}.{nameSpace}";
+            }
+        }
+
+        return nameSpace;
+    }
 }

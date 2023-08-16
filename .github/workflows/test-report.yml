@@ -5,7 +5,7 @@ on:
     types:
       - completed
 
-run-name: "Test results for '${{ github.event.workflow_run.head_commit.message }}' triggered by @${{ github.actor }}"
+run-name: "Test results for '${{ github.event.workflow_run.head_commit.message }}'"
 
 jobs:
   report:
