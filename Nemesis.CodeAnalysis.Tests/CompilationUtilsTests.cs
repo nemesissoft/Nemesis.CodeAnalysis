@@ -19,10 +19,9 @@ public class CompilationUtilsTests
 
         var expectedPart = new[] {
             "Microsoft.CodeAnalysis",
-            "mscorlib",
             "Nemesis.CodeAnalysis", "Nemesis.CodeAnalysis.Tests",
             "nunit.framework",
-            "System", "System.Collections.Immutable", "System.Core", "System.ValueTuple",
+            "System.Collections.Immutable",
         };
 
         Assert.Multiple(() =>
