@@ -7,9 +7,29 @@ namespace Nemesis.CodeAnalysis.Tests;
 public class CompilationUtilsTests
 {
     [OneTimeSetUp]
-    public void BeforeAllTests()
+    public void BeforeAllTests() => TestExecutionContext.CurrentContext.CurrentCulture = CultureInfo.InvariantCulture;
+
+    [Test]
+    public void GetCurrentReferences_ShouldReturnRerefencesOfCurrentDomain()
     {
-        TestExecutionContext.CurrentContext.CurrentCulture = CultureInfo.InvariantCulture;
+        string[] actual = CompilationUtils.GetCurrentReferences()
+            .Cast<PortableExecutableReference>()
+            .Select(r => Path.GetFileNameWithoutExtension(r.FilePath)!)
+            .ToArray();
+
+        var expectedPart = new[] {
+            "Microsoft.CodeAnalysis",
+            "mscorlib",
+            "Nemesis.CodeAnalysis", "Nemesis.CodeAnalysis.Tests",
+            "nunit.framework",
+            "System", "System.Collections.Immutable", "System.Core", "System.ValueTuple",
+        };
+
+        Assert.Multiple(() =>
+        {
+            foreach (var expected in expectedPart)
+                Assert.That(actual, Does.Contain(expected));
+        });
     }
 
     private static IEnumerable<TestCaseData> GetDataFor_TryEvaluateExpression()

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using System.Runtime.Serialization;
 using Microsoft.CodeAnalysis.Emit;
 
 namespace Nemesis.CodeAnalysis.Sample;
@@ -142,23 +141,8 @@ public class RoslynCompilationException : Exception
 
     public RoslynCompilationException(string message, EmitResult result) : base(message) => Result = result;
 
-    public RoslynCompilationException(string message, EmitResult result, Exception inner) : base(message, inner) => Result = result;
-
-    protected RoslynCompilationException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-        if (info == null) throw new ArgumentNullException(nameof(info));
-
-        Result = (EmitResult)(info.GetValue("Result", typeof(EmitResult)) ?? throw new("No result found"));
-    }
-
-    public override void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-        if (info == null) throw new ArgumentNullException(nameof(info));
-
-        base.GetObjectData(info, context);
-
-        info.AddValue("Result", Result);
-    }
+    public RoslynCompilationException(string message, EmitResult result, Exception inner) : base(message, inner) =>
+        Result = result;
 }
 
 public sealed class CachedCompiler : ICompiler

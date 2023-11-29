@@ -92,6 +92,11 @@ public static class CompilationUtils
         return (compilation, sourceTree, compilation.GetSemanticModel(sourceTree));
     }
 
+    public static IEnumerable<MetadataReference> GetCurrentReferences() =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+            .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
+            .ToList().AsReadOnly();
 
     public static GeneratorDriver CreateDriver(Compilation c, params ISourceGenerator[] generators)
         => CSharpGeneratorDriver.Create(generators, parseOptions: (CSharpParseOptions)c.SyntaxTrees.First().Options);
